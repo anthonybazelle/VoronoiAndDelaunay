@@ -1,8 +1,10 @@
-#include "Render.h"
+#include "Scene.h"
 #include <iostream>
 
 int main(int argc, const char* argv)
 {
-	Render* pRender = new Render(600, 800);
-	int result = pRender->StartLoop(argc, argv);
+
+	Scene *scene = new Scene(600, 600);
+	scene->initOpenGl(argc, argv);
+	scene->lauchOpenGLLoop();
 }
