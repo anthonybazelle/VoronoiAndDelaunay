@@ -183,9 +183,6 @@ void Scene::applyTransformation(char key)
 
 void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop)
 {
-	// There must be at least 3 points
-	//if (n < 3) return std::vector<maths::Point>();
-
 	// On récupère le point le plus à gauche, s'il y en a plusieurs sur le même axe X on recupère celui qui est le plus bas sur cet axe
 	int l = 0;
 	for (int i = 1; i < points.size(); i++)
@@ -215,13 +212,11 @@ void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Poin
 	envelop.push_back(points[p]);
 }
 
-
-// A utility function to find next to top in a stack
 maths::Point nextToTop(std::stack<Point> &S)
 {
-	Point p = S.top();
+	maths::Point p = S.top();
 	S.pop();
-	Point res = S.top();
+	maths::Point res = S.top();
 	S.push(p);
 	return res;
 }
@@ -296,7 +291,7 @@ void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::P
 	if (m < 3) return;
 
 	// Stack ou vector peu import, à modifier ensuite p-e
-	std::stack<Point> S;
+	std::stack<maths::Point> S;
 	S.push(points[0]);
 	S.push(points[1]);
 	S.push(points[2]);
