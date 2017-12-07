@@ -26,6 +26,7 @@
 #include "Math.h"
 #include <map>
 #include <vector>
+#include <stack>
 
 class Scene
 {
@@ -64,6 +65,10 @@ class Scene
 	std::vector<maths::Point>* dataPointsJarvis;
 	std::vector<maths::Point>* jarvisPoints;
 
+	// Graham Scan
+	std::vector<maths::Point>* grahamScanPoints;
+
+
 	float color[4];
 
 public:
@@ -101,8 +106,13 @@ public:
 	void applyTransformation(char key);
 	void linkOtherCurve();
 	void changeBezierRecursion(int nb);
-	void DrawJarvisPolygon(std::vector<maths::Point>& lp, std::vector<maths::Point>& env);
-	void ChangePosition(std::vector<maths::Point>& lp, int indice1, int indice2);
+	
+	
+	int Orientation(maths::Point p, maths::Point q, maths::Point r);
+	int Compare(const void *vp1, const void *vp2);
+
+	void RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result);
+	void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop);
 };
 
 #endif // ! SCENE

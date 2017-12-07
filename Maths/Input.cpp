@@ -116,7 +116,7 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		glutPostRedisplay();
 		break;
 	case 'j':
-		std::cout << "change state : ENTER_POINTS_JARVIS" << std::endl;
+		std::cout << "change state : RUN_JARVIS" << std::endl;
 		scene->changeState(RUN_JARVIS_MARCH);
 		glutPostRedisplay();
 		break;
@@ -176,6 +176,10 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		scene->linkOtherCurve();
 		glutPostRedisplay();
 		break;
+	case 'g':
+		std::cout << "change state : RUN_GRAHAM_SCAN" << std::endl;
+		scene->changeState(RUN_GRAHAM_SCAN);
+		glutPostRedisplay();
 	case '+':
 		scene->changeBezierRecursion(1);
 		glutPostRedisplay();

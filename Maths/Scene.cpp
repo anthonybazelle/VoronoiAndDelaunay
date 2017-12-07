@@ -4,6 +4,7 @@ using namespace maths;
 
 Scene* Scene::currentInstance = nullptr;
 
+maths::Point p0;
 
 void Scene::drawCallBack()
 {
@@ -117,6 +118,7 @@ void Scene::createMenu()
 	glutAddMenuEntry("Draw revolution              R", 9);
 	glutAddMenuEntry("Enter points for Jarvis      P", 10);
 	glutAddMenuEntry("Run Jarvis March             J", 11);
+	glutAddMenuEntry("Run Graham Scan              G", 12);
 	/*glutAddMenuEntry("Cut               C", 3);
 	glutAddMenuEntry("Fill polygon(s)   F", 4);
 	glutAddMenuEntry("Set window        Q", 5);
@@ -179,49 +181,139 @@ void Scene::applyTransformation(char key)
 	}
 }
 
-void Scene::DrawJarvisPolygon(std::vector<maths::Point>& lp, std::vector<maths::Point>& env)
+void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop)
 {
-	// recherche du point le plus bas,
-	// puis à chaque étape recherche du point qui forme le plus petit
-	// angle, avec le segment des 2 points précédents de l'enveloppe
-	env.clear();
-	// recherche du point le plus bas à droite
-	int iBas = 0;
-	maths::Point pBas= (maths::Point)lp.at(0);
-	for( int i = 1; i < lp.size(); ++i) {
-		maths::Point p = ((maths::Point)lp.at(i));
-		if(p.y > pBas.y || (p.y == pBas.y && p.x > pBas.x) ) {
-			pBas = p;
-			iBas = i;
-		}
-	}
-	lp.push_back(pBas);
+	// There must be at least 3 points
+	//if (n < 3) return std::vector<maths::Point>();
 
-	double angle = 0.0;
-	double anglePrec;
-	int m, iMin = iBas;
-	for(  m = 0; m < lp.size()-1; ++m){
-		this->ChangePosition(lp, iMin, m);
-		// recherche du point suivant
-		iMin = lp.size()-1;  anglePrec = angle; angle = 2*3.14159265358979323846264338328;
-		for( int i = m+1; i < lp.size(); ++i){
-			double a = lp.at(m).Angle(lp.at(i)) ;
-			if(a > anglePrec && a < angle){
-				iMin = i; angle = a;
-			}else if( a==angle ){ // points alignés : choisir le plus éloigné
-				if(lp.at(iMin).Distance(lp.at(m)) < lp.at(i).Distance(lp.at(m))) 
-					iMin = i; 
-			}
+	// On récupère le point le plus à gauche, s'il y en a plusieurs sur le même axe X on recupère celui qui est le plus bas sur cet axe
+	int l = 0;
+	for (int i = 1; i < points.size(); i++)
+		if (points[i].x < points[l].x || points[i].x == points[l].x && points[i].y < points[l].y)
+			l = i;
+
+	
+	// On boucle tant que l'on ne retombe pas sur le point de départ
+	int p = l, q;
+	do
+	{
+		// On ajoute le dernier point trouvé à l'enveloppe
+		envelop.push_back(points[p]);
+
+		// On recherche ici le prochain point de tel sorte qu'il forme avec le precedent segment l'angle minimum et restant dans le sens anti-horaire
+		q = (p+1) % points.size();
+		for (int i = 0; i < points.size(); i++)
+		{
+			if (Orientation(points[p], points[i], points[q]) == 2)
+				q = i;
 		}
-		if(iMin == lp.size()-1 )break;// on est retombé sur le point de départ
-	}
-	for( int i = 0; i <= m; ++i) env.push_back(lp.at(i));
-	lp.erase(lp.begin() + (lp.size()-1));
+		p = q;
+
+	} while (p != l); 
+	
+	// Pour fermer l'enveloppe
+	envelop.push_back(points[p]);
 }
 
-void Scene::ChangePosition(std::vector<maths::Point>& lp, int indice1, int indice2)
+
+// A utility function to find next to top in a stack
+maths::Point nextToTop(std::stack<Point> &S)
 {
-	std::iter_swap(lp.begin() + indice1, lp.begin() + indice2);
+	Point p = S.top();
+	S.pop();
+	Point res = S.top();
+	S.push(p);
+	return res;
+}
+
+void Swap(maths::Point &p1, maths::Point &p2)
+{
+	maths::Point temp = p1;
+	p1 = p2;
+	p2 = temp;
+}
+
+int Distance(Point p1, Point p2)
+{
+	return (p1.x - p2.x)*(p1.x - p2.x) +
+		(p1.y - p2.y)*(p1.y - p2.y);
+}
+
+// Orientation du triplet ordonné (p, q, r).
+// 0 = p, q et r colinéaires
+// 1 = Sens horaire
+// 2 = Sens anti-horaire
+int Scene::Orientation(maths::Point p, maths::Point q, maths::Point r)
+{
+	float val = (q.y - p.y) * (r.x - q.x) -
+		(q.x - p.x) * (r.y - q.y);
+
+	if (val == 0) 
+		return 0;
+	return (val > 0)? 1: 2;
+}
+
+int Scene::Compare(const void *vp1, const void *vp2)
+{
+	maths::Point *p1 = (maths::Point *)vp1;
+	maths::Point *p2 = (maths::Point *)vp2;
+
+	// Find orientation
+	int o = Orientation(p0, *p1, *p2);
+	if (o == 0)
+		return (Distance(p0, *p2) >= Distance(p0, *p1))? -1 : 1;
+
+	return (o == 2)? -1: 1;
+}
+
+
+void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result)
+{
+	int ymin = points[0].y, min = 0;
+	for (int i = 1; i < points.size(); i++)
+	{
+		int y = points[i].y;
+
+		if ((y < ymin) || (ymin == y &&
+			points[i].x < points[min].x))
+			ymin = points[i].y, min = i;
+	}
+
+	Swap(points[0], points[min]);
+
+	p0 = points[0];
+
+	int m = 1;
+	for (int i = 1; i < points.size(); i++)
+	{
+		while (i < (points.size()-1) && Orientation(p0, points[i], points[i+1]) == 0)
+			i++;
+
+		points[m] = points[i];
+		m++;  
+	}
+
+	if (m < 3) return;
+
+	// Stack ou vector peu import, à modifier ensuite p-e
+	std::stack<Point> S;
+	S.push(points[0]);
+	S.push(points[1]);
+	S.push(points[2]);
+
+	for (int i = 3; i < m; i++)
+	{
+		while (Orientation(nextToTop(S), S.top(), points[i]) != 2)
+			S.pop();
+		S.push(points[i]);
+	}
+
+	int sizeStack = S.size();
+	for(int i=0; i< sizeStack; ++i)
+	{
+		result[i]= S.top();
+		S.pop();
+	}
 }
 
 void Scene::changeBezierRecursion(int nb)
@@ -285,6 +377,8 @@ void Scene::menu(int num) {
 	case 11:
 		input->checkKeyboardInputs('j', 0, 0);
 		break;
+	case 12:
+		input->checkKeyboardInputs('g', 0, 0);
 	default:
 		break;
 	}
@@ -542,6 +636,24 @@ void Scene::mainLoop()
 
 			glDrawArrays(GL_POINTS, 0, this->dataPointsJarvis->size());
 			glDisableVertexAttribArray(position_location);
+
+			if(this->dataPointsJarvis->size() > 2)
+			{
+				this->jarvisPoints->clear();
+				//ConvexHull(*(this->dataPointsJarvis), (*this->jarvisPoints));
+				//DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
+
+				if(!this->jarvisPoints->empty())
+				{
+					glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->jarvisPoints->data());
+					glEnableVertexAttribArray(position_location);
+
+					glPointSize(5);
+
+					glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
+					glDisableVertexAttribArray(position_location);
+				}
+			}
 		}
 	}
 	else if(state == RUN_JARVIS_MARCH)
@@ -563,9 +675,10 @@ void Scene::mainLoop()
 			glDrawArrays(GL_POINTS, 0, this->dataPointsJarvis->size());
 			glDisableVertexAttribArray(position_location);
 
-
-
-			DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
+			this->jarvisPoints->clear();
+			RunJarvis(*(this->dataPointsJarvis), *(this->jarvisPoints));
+			//ConvexHull(*(this->dataPointsJarvis), (*this->jarvisPoints));
+			//DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
 
 			if(!this->jarvisPoints->empty())
 			{
@@ -575,6 +688,34 @@ void Scene::mainLoop()
 				glPointSize(5);
 
 				glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
+				glDisableVertexAttribArray(position_location);
+			}
+		}
+	}
+	else if(state == RUN_GRAHAM_SCAN)
+	{
+		const maths::Point *points = this->dataPointsJarvis->data();
+
+		glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+		glEnableVertexAttribArray(position_location);
+
+		glPointSize(5);
+
+		glDrawArrays(GL_POINTS, 0, this->dataPointsJarvis->size());
+		glDisableVertexAttribArray(position_location);
+
+		if(this->dataPointsJarvis->size() > 3)
+		{
+			this->RunGrahamScan(*(this->dataPointsJarvis), *(this->grahamScanPoints));
+
+			if(!this->grahamScanPoints->empty())
+			{
+				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->grahamScanPoints->data());
+				glEnableVertexAttribArray(position_location);
+
+				glPointSize(5);
+
+				glDrawArrays(GL_LINE_STRIP, 0, this->grahamScanPoints->size());
 				glDisableVertexAttribArray(position_location);
 			}
 		}
@@ -951,6 +1092,7 @@ Scene::Scene(int w, int h)
 
 	this->dataPointsJarvis = new std::vector<maths::Point>();
 	this->jarvisPoints = new std::vector<maths::Point>();
+	this->grahamScanPoints = new std::vector<maths::Point>();
 
 	countPass = 0;
 	radiusPoint.x = 10.0f/ width;
