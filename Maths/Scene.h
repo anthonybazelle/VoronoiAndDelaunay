@@ -108,8 +108,8 @@ public:
 	void changeBezierRecursion(int nb);
 	
 	
-	int Orientation(maths::Point p, maths::Point q, maths::Point r);
-	int Compare(const void *vp1, const void *vp2);
+	static int Orientation(maths::Point p, maths::Point q, maths::Point r);
+	static int Compare(const void *vp1, const void *vp2);
 
 	void RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result);
 	void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop);

@@ -102,8 +102,6 @@ void Scene::initOpenGl(int argc, const char* argv)
 
 void Scene::createMenu()
 {
-
-	// ATTENDS JE SUIS AU TEL AVEC UN COLLEGUE
 	mainMenu = glutCreateMenu(Scene::menuCallBack);
 
 	glutAddMenuEntry("Exit", 0);
@@ -253,7 +251,6 @@ int Scene::Compare(const void *vp1, const void *vp2)
 	maths::Point *p1 = (maths::Point *)vp1;
 	maths::Point *p2 = (maths::Point *)vp2;
 
-	// Find orientation
 	int o = Orientation(p0, *p1, *p2);
 	if (o == 0)
 		return (Distance(p0, *p2) >= Distance(p0, *p1))? -1 : 1;
@@ -264,13 +261,13 @@ int Scene::Compare(const void *vp1, const void *vp2)
 
 void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result)
 {
+	// Comme pour Jarvis, on recupere le point le plus en bas à gauche
 	int ymin = points[0].y, min = 0;
 	for (int i = 1; i < points.size(); i++)
 	{
 		int y = points[i].y;
 
-		if ((y < ymin) || (ymin == y &&
-			points[i].x < points[min].x))
+		if ((y < ymin) || (ymin == y && points[i].x < points[min].x))
 			ymin = points[i].y, min = i;
 	}
 
@@ -278,37 +275,52 @@ void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::P
 
 	p0 = points[0];
 
+	// Ici on tri la liste des points par rapport à leur angle
+	// Si les points sont colinéaires, on tri par rapport à celui qui est le plus loin du point référent p0
+	qsort(&points[1], points.size()-1, sizeof(Point), Compare);
+
 	int m = 1;
+
+	// Reprend un peu l'idée du tri par extraction si jamais tu vois l'algo, comme pour Jarvis
 	for (int i = 1; i < points.size(); i++)
 	{
-		while (i < (points.size()-1) && Orientation(p0, points[i], points[i+1]) == 0)
+		while (i < (points.size() - 1) && Orientation(p0, points[i], points[i+1]) == 0)
 			i++;
 
 		points[m] = points[i];
 		m++;  
 	}
 
+	// minimum 3 points comme pour Jarvis sinon inutile
 	if (m < 3) return;
 
-	// Stack ou vector peu import, à modifier ensuite p-e
-	std::stack<maths::Point> S;
-	S.push(points[0]);
-	S.push(points[1]);
-	S.push(points[2]);
+	// Stack ou vector peu importe, à modifier ensuite p-e, mais pratique avec la stack
+	std::stack<maths::Point> stack;
+	stack.push(points[0]);
+	stack.push(points[1]);
+	stack.push(points[2]);
 
 	for (int i = 3; i < m; i++)
 	{
-		while (Orientation(nextToTop(S), S.top(), points[i]) != 2)
-			S.pop();
-		S.push(points[i]);
+		// Dans le cas où l'on n'est pas dans le sens anti-horaire sur l'un des trois points, on depile
+		while (Orientation(nextToTop(stack), stack.top(), points[i]) != 2)
+			stack.pop();
+		stack.push(points[i]);
 	}
 
-	int sizeStack = S.size();
+	int sizeStack = stack.size();
+
+	// Pour fermer l'enveloppe, penser à push le point référent
+	result.push_back(p0);
+
 	for(int i=0; i< sizeStack; ++i)
 	{
-		result[i]= S.top();
-		S.pop();
+		//maths::Point p = stack.top();
+		result.push_back(stack.top());
+		stack.pop();
 	}
+
+	
 }
 
 void Scene::changeBezierRecursion(int nb)
