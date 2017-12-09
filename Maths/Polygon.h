@@ -22,7 +22,35 @@ namespace maths
 		{
 			return atan2(y - indice2.y, x - indice2.x);
 		}
+		bool equals2D(Point p)
+		{
+			return (p.x == x && p.y == y);
+		}
 	};
+
+	struct Triangle
+	{
+		Point p, c1, c2;
+
+		Point centerCircle()
+		{
+			Point center;
+			return center;
+		}
+
+		bool isDoublon(Triangle t)
+		{
+			//make si tout les points d'un triangle sont diffferents
+			if (!t.p.equals2D(p) && !t.p.equals2D(c1) && !t.p.equals2D(c2))
+				return false;
+			if (!t.c1.equals2D(p) && !t.c1.equals2D(c1) && !t.c1.equals2D(c2))
+				return false;
+			if (!t.c2.equals2D(p) && !t.c2.equals2D(c1) && !t.c2.equals2D(c2))
+				return false;
+			return true;
+		}
+	};
+	
 	typedef struct Point Point;
 
 	struct Color

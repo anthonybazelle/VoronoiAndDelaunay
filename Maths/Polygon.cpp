@@ -51,6 +51,16 @@ void maths::Polygon::addPoint(maths::Point p)
 	{
 		sensTrigo = p.x < points->at(0).x;
 	}
+	bool find = false;
+	for (int i = 0; i < points->size(); i++)
+	{
+		if (points->at(i).equals2D(p))
+		{
+			std::cout << "Point already in polygon" << std::endl;
+			return;
+		}
+		
+	}
 	points->push_back(p);
 	visibility->push_back(true);
 }

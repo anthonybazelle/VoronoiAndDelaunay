@@ -110,11 +110,6 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		scene->changeState(ENTER_POINTS_POLYGON);
 		glutPostRedisplay();
 		break;
-	case 'p':
-		std::cout << "change state : ENTER_POINTS_JARVIS" << std::endl;
-		scene->changeState(ENTER_POINTS_JARVIS);
-		glutPostRedisplay();
-		break;
 	case 'j':
 		std::cout << "change state : RUN_JARVIS" << std::endl;
 		scene->changeState(RUN_JARVIS_MARCH);
@@ -145,16 +140,6 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		scene->changeActiveTransformation(NO_TRANS);
 		glutPostRedisplay();
 		break;
-	case 'u':
-		std::cout << "DRAW EXTRUDE" << std::endl;
-		scene->changeIntermediateState(EXTRUDE);
-		glutPostRedisplay();
-		break;
-	case 'r':
-		std::cout << "DRAW REVOLUTION" << std::endl;
-		scene->changeIntermediateState(REVOLUTION);
-		glutPostRedisplay();
-		break;
 	case 'z':
 		scene->applyTransformation(touche);
 		glutPostRedisplay();
@@ -171,23 +156,10 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		scene->applyTransformation(touche);
 		glutPostRedisplay();
 		break;
-	case 'l':
-		std::cout << "link" << std::endl;
-		scene->linkOtherCurve();
-		glutPostRedisplay();
-		break;
 	case 'g':
 		std::cout << "change state : RUN_GRAHAM_SCAN" << std::endl;
 		scene->changeState(RUN_GRAHAM_SCAN);
 		glutPostRedisplay();
-	case '+':
-		scene->changeBezierRecursion(1);
-		glutPostRedisplay();
-		break;
-	case '-':
-		scene->changeBezierRecursion(-1);
-		glutPostRedisplay();
-		break;
 	default:
 		break;
 	}
@@ -196,7 +168,7 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 void Input::checkMouseClicks(int button, int state, int x, int y)
 {
 	State sceneState = scene->getState();
-	if (sceneState == DRAW && button == GLUT_LEFT_BUTTON)
+	if ((sceneState == DRAW || sceneState== RUN_JARVIS_MARCH )&& button == GLUT_LEFT_BUTTON)
 	{
 		if (state == GLUT_DOWN)
 		{
@@ -225,7 +197,7 @@ void Input::checkMouseClicks(int button, int state, int x, int y)
 		}
 
 	}
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && (sceneState == ENTER_POINTS_POLYGON || sceneState == ENTER_WINDOW || sceneState == ENTER_POINTS_JARVIS)) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && (sceneState == ENTER_POINTS_POLYGON  )) {
 		maths::Point p;
 		p.x = x;
 		p.y = y;
@@ -237,11 +209,14 @@ void Input::checkMouseClicks(int button, int state, int x, int y)
 
 	/*if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && scene->getState() == DRAW)
 	{
-	maths::Point p;
-	p.x = x;
-	p.y = y;
+		maths::Point p;
+		p.x = x;
+		p.y = y;
 
-	scene->cursorInPolygon(p);
+		
+		scene->cursorInPolygon(p);
+
+		glutPostRedisplay();
 	}*/
 }
 

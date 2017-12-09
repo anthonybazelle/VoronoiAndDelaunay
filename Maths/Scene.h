@@ -27,6 +27,9 @@
 #include <map>
 #include <vector>
 #include <stack>
+#include <time.h>
+#include <stdlib.h> 
+#include <stdio.h>
 
 class Scene
 {
@@ -46,13 +49,11 @@ class Scene
 	int mainMenu;
 	bool isInPolygon; 
 	State state;
-	IntermediateState intermediateState;
-	std::vector<maths::Polygon> *polygons; 
-	maths::Polygon *window;
+	maths::Polygon polygon; 
 	std::vector<std::vector<maths::Point>*> *allIntersection ;
 	std::vector<maths::Polygon> *stackPolygonClicked ;
 
-	int polygonSelected;
+	bool polygonSelected;
 	int pointSelected;
 	Transformation activeTransformation;
 
@@ -62,11 +63,15 @@ class Scene
 	
 
 	// Jarvis
-	std::vector<maths::Point>* dataPointsJarvis;
 	std::vector<maths::Point>* jarvisPoints;
 
 	// Graham Scan
 	std::vector<maths::Point>* grahamScanPoints;
+
+	//Delaunay
+	std::vector<maths::Point>* delaunayPoint;
+	std::vector<maths::Triangle>* delaunayTriangles;
+
 
 
 	float color[4];
@@ -76,7 +81,6 @@ public:
 	void lauchOpenGLLoop();
 	//static void menuCallBack(int num);
 	void initOpenGl(int argc, const char* argv);
-	std::vector<maths::Point>* LCARemplissage(maths::Polygon polygon);
 	void mainLoop();
 	void createMenu();
 	maths::Point* isVertexFromPolygon(maths::Polygon polygon, maths::Point pointTest);
@@ -84,7 +88,6 @@ public:
 	void cursorInPolygon(maths::Point p);
 	maths::Point* ConvertPointPixelToOpenGLUnit(maths::Point point);
 	void changeState(State state);
-	void changeIntermediateState(IntermediateState s);
 	State getState();
 	void addPoint(maths::Point p);
 	void setDrawWindow();
@@ -104,8 +107,8 @@ public:
 	bool hasSelectedPolygon();
 	void changeActiveTransformation(Transformation trans);
 	void applyTransformation(char key);
-	void linkOtherCurve();
-	void changeBezierRecursion(int nb);
+
+	void triangularisation();
 	
 	
 	static int Orientation(maths::Point p, maths::Point q, maths::Point r);
