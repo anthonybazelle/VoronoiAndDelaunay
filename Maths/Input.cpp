@@ -174,7 +174,7 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 void Input::checkMouseClicks(int button, int state, int x, int y)
 {
 	State sceneState = scene->getState();
-	if ((sceneState == DRAW || sceneState== RUN_JARVIS_MARCH )&& button == GLUT_LEFT_BUTTON)
+	if ((sceneState == DRAW || sceneState== RUN_JARVIS_MARCH || DELAUNAY )&& button == GLUT_LEFT_BUTTON)
 	{
 		if (state == GLUT_DOWN)
 		{

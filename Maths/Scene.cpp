@@ -32,7 +32,7 @@ void Scene::moveSelectedPoint(float x, float y)
 
 void Scene::selectPolygon(float x, float y)
 {
-	if (state == DRAW || RUN_JARVIS_MARCH)
+	if (state == DRAW || RUN_JARVIS_MARCH || DELAUNAY)
 	{
 		maths::Point p;
 		p.x = x;
@@ -346,7 +346,7 @@ void Scene::changeActiveTransformation(Transformation trans)
 
 bool Scene::isPointSelected(float mX, float mY)
 {
-	if (state == DRAW || state==RUN_JARVIS_MARCH)
+	if (state == DRAW || state==RUN_JARVIS_MARCH || DELAUNAY)
 	{
 		float nb = 10;
 		float nbX = nb /width;
@@ -544,16 +544,13 @@ void Scene::mainLoop()
 
 			triangularisation();
 			
-			for (int i = 0; i < delaunayTriangles->size(); i++)
-			{
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, &delaunayTriangles->at(i));
-				glEnableVertexAttribArray(position_location);
+			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, delaunayLines->data());
+			glEnableVertexAttribArray(position_location);
 
-				glPointSize(5);
+			glPointSize(5);
 
-				glDrawArrays(GL_LINE_LOOP, 0, 3);
-				glDisableVertexAttribArray(position_location);
-			}
+			glDrawArrays(GL_LINES, 0, delaunayLines->size()*2);
+			glDisableVertexAttribArray(position_location);
 		}
 	}
 	else if(state == RUN_GRAHAM_SCAN)
@@ -802,73 +799,31 @@ void Scene::triangularisation()
 {
 	int size = polygon.getPoints()->size();
 
-	delaunayPoint->clear();
+	delaunayLines->clear();
+
 	for (int i = 0; i < size; i++)
 	{
-		Point p = polygon.getPoint(i);
-		int j = 0;
-		for (j = 0; j < delaunayPoint->size(); j++)
+		Point p = polygon.getPoints()->at(i);
+		for (int j = i+1 ; j < size; j++)
 		{
-			Point otherPoint = delaunayPoint->at(j);
-			if (otherPoint.x < p.x)
-				break;
-			if (otherPoint.x > p.x)
-				continue;
-			if (otherPoint.y < p.y)
-				break;
-			if (otherPoint.y < p.y)
-				continue;
-		}
-		delaunayPoint->insert(delaunayPoint->begin()+j, p);
-	}
-
-
-	delaunayTriangles->clear();
-	for (int i = 0; i < size-2; i++)
-	{
-		Triangle t = { delaunayPoint->at(i), delaunayPoint->at(i + 1),delaunayPoint->at(i + 2) };
-		/*bool findIntersection = true;
-		while (findIntersection)
-		{
-			for (int j = 0; j < delaunayTriangles->size(); j++)
+			Line l = { p, polygon.getPoints()->at(j) };
+			bool findIntersection = false;
+			for (int k = 0; k < delaunayLines->size();k++)
 			{
-				
+				findIntersection = l.hasIntersection(delaunayLines->at(k));
+				if (findIntersection)
+				{
+					break;
+				}
 			}
-		}*/
-		
-
-		delaunayTriangles->push_back(t);
-	}
-
-
-		
-	/*delaunayPoint->clear();
-	for (int i = 0; i < size; i++)
-	{
-		Point p = polygon.getPoint(i);
-		int j = 0;
-		for (j = 0; j < delaunayPoint->size(); j++)
-		{
-			Point otherPoint = delaunayPoint->at(j);
-			if (otherPoint.y < p.y)
-				break;
-			if (otherPoint.y < p.y)
-				continue;
-			if (otherPoint.x < p.x)
-				break;
-			if (otherPoint.x > p.x)
-				continue;
+			if (!findIntersection)
+			{
+				delaunayLines->push_back(l);
+			}
 		}
-		delaunayPoint->insert(delaunayPoint->begin() + j, p);
 	}
 
-	delaunayTriangles->clear();
-	for (int i = 0; i < size - 2; i++)
-	{
-		Triangle t{ delaunayPoint->at(i), delaunayPoint->at(i + 1),delaunayPoint->at(i + 2) };
-		for (int i = delaunayTriangles)
-			delaunayTriangles->push_back();
-	}*/
+
 }
 
 Scene::Scene(int w, int h)
@@ -888,7 +843,7 @@ Scene::Scene(int w, int h)
 	this->grahamScanPoints = new std::vector<maths::Point>();
 
 
-	this->delaunayTriangles = new std::vector<maths::Triangle>();
+	this->delaunayLines = new std::vector<maths::Line>();
 	this->delaunayPoint = new std::vector<maths::Point>();
 
 	srand(time(NULL));
@@ -910,38 +865,3 @@ Scene::~Scene()
 {
 	g_BasicShader.DestroyProgram();
 }
-
-
-/*for (int i = 0; i < size; ++i)
-{
-maths::Point p = delaunayPoint->at(i);
-int index1 = 0, index2 = 0;
-bool isADoublon;
-while (index1 == index2 || index1 == i || index2 == i || isADoublon)
-{
-isADoublon = false;
-
-index1 = rand() % size;
-index2 = rand() % size;
-
-if (index2 < i && index1 < i)
-{
-maths::Triangle t = { p, delaunayPoint->at(index1), delaunayPoint->at(index2) };
-maths::Triangle t1 = delaunayTriangles->at(index1);
-if (t1.isDoublon(t))
-{
-isADoublon = true;
-continue;
-}
-maths::Triangle t2 = delaunayTriangles->at(index2);
-if (t2.isDoublon(t))
-{
-isADoublon = true;
-continue;
-}
-}
-
-}
-delaunayTriangles->push_back({ p,delaunayPoint->at(index1), delaunayPoint->at(index2) });
-
-}*/
