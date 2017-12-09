@@ -50,6 +50,31 @@ namespace maths
 			return true;
 		}
 	};
+
+	struct Segment
+	{
+		Point p1, p2;
+
+		Point intersection(Segment s)
+		{
+			Point p;
+			return p;
+		}
+
+		float coefDirecteur()
+		{
+			float coefDirecteur = -1;
+			if (p1.x < p2.x)
+			{
+				return (p2.y - p1.y) / (p2.x - p1.x);
+			}
+			else if (p1.x < p2.x)
+			{
+				return (p2.y - p1.y) / (p2.x - p1.x);
+			}
+			return -1;
+		}
+	};
 	
 	typedef struct Point Point;
 

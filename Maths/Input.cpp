@@ -160,6 +160,12 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 		std::cout << "change state : RUN_GRAHAM_SCAN" << std::endl;
 		scene->changeState(RUN_GRAHAM_SCAN);
 		glutPostRedisplay();
+		break;
+	case 'h':
+		std::cout << "delaunay" << std::endl;
+		scene->changeState(DELAUNAY);
+		glutPostRedisplay();
+		break;
 	default:
 		break;
 	}

@@ -105,11 +105,50 @@ void Scene::createMenu()
 	glutAddMenuEntry("Unactivate all               V", 6);
 	glutAddMenuEntry("Run Jarvis March             J", 8);
 	glutAddMenuEntry("Run Graham Scan              G", 9);
+	glutAddMenuEntry("Run Delaunay                 H", 10);
 
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
+// On traite ici le choix de l'utilisateur dans le menu contextuel
+void Scene::menu(int num) {
+	switch (num)
+	{
+	case 0:
+		glutDestroyWindow(windowId);
+		exit(0);
+		break;
+	case 1:
+		input->checkKeyboardInputs('a', 0, 0);
+		break;
+	case 2:
+		input->checkKeyboardInputs('e', 0, 0);
+		break;
+	case 3:
+		input->checkKeyboardInputs('w', 0, 0);
+		break;
+	case 4:
+		input->checkKeyboardInputs('x', 0, 0);
+		break;
+	case 5:
+		input->checkKeyboardInputs('c', 0, 0);
+		break;
+	case 6:
+		input->checkKeyboardInputs('v', 0, 0);
+		break;
+	case 8:
+		input->checkKeyboardInputs('j', 0, 0);
+		break;
+	case 9:
+		input->checkKeyboardInputs('g', 0, 0);
+	case 10:
+		input->checkKeyboardInputs('h', 0, 0);
+	default:
+		break;
+	}
 
+	glutPostRedisplay();
+}
 
 void Scene::applyTransformation(char key)
 {
@@ -302,43 +341,7 @@ void Scene::changeActiveTransformation(Transformation trans)
 	activeTransformation = trans;
 }
 
-// On traite ici le choix de l'utilisateur dans le menu contextuel
-void Scene::menu(int num) {
-	switch (num)
-	{
-	case 0:
-		glutDestroyWindow(windowId);
-		exit(0);
-		break;
-	case 1:
-		input->checkKeyboardInputs('a', 0, 0);
-		break;
-	case 2:
-		input->checkKeyboardInputs('e', 0, 0);
-		break;
-	case 3:
-		input->checkKeyboardInputs('w', 0, 0);
-		break;
-	case 4:
-		input->checkKeyboardInputs('x', 0, 0);
-		break;
-	case 5:
-		input->checkKeyboardInputs('c', 0, 0);
-		break;
-	case 6:
-		input->checkKeyboardInputs('v', 0, 0);
-		break;
-	case 8:
-		input->checkKeyboardInputs('j', 0, 0);
-		break;
-	case 9:
-		input->checkKeyboardInputs('g', 0, 0);
-	default:
-		break;
-	}
 
-	glutPostRedisplay();
-}
 
 
 bool Scene::isPointSelected(float mX, float mY)
@@ -350,7 +353,7 @@ bool Scene::isPointSelected(float mX, float mY)
 		float nbY = nb / height;
 
 		std::cout << "mx = " << mX <<"  mY=" << mY << std::endl;
-		for (int j = 0; j < polygon.getPoints()->size(); j++)
+		for (int j = 0; j < polygon.getPoints()->size(); j++) 
 		{
 			maths::Point p = polygon.getPoints()->at(j);
 
@@ -516,6 +519,39 @@ void Scene::mainLoop()
 				glPointSize(5);
 
 				glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
+				glDisableVertexAttribArray(position_location);
+			}
+		}
+	}
+	else if (state == DELAUNAY)
+	{
+		if (polygon.getPoints()->size()<2)
+		{
+			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
+		}
+		else
+		{
+			// redondance ici a cause des else if
+			const maths::Point *points = this->polygon.getPoints()->data();
+
+			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glEnableVertexAttribArray(position_location);
+
+			glPointSize(5);
+
+			glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
+			glDisableVertexAttribArray(position_location);
+
+			triangularisation();
+			
+			for (int i = 0; i < delaunayTriangles->size(); i++)
+			{
+				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, &delaunayTriangles->at(i));
+				glEnableVertexAttribArray(position_location);
+
+				glPointSize(5);
+
+				glDrawArrays(GL_LINE_LOOP, 0, 3);
 				glDisableVertexAttribArray(position_location);
 			}
 		}
@@ -764,45 +800,75 @@ void Scene::rotate_point(maths::Polygon *poly,float angle)
 
 void Scene::triangularisation()
 {
-	int size = delaunayPoint->size();
-	if (size > 2)
+	int size = polygon.getPoints()->size();
+
+	delaunayPoint->clear();
+	for (int i = 0; i < size; i++)
 	{
-		for (int i = 0; i < size; ++i)
+		Point p = polygon.getPoint(i);
+		int j = 0;
+		for (j = 0; j < delaunayPoint->size(); j++)
 		{
-			maths::Point p = delaunayPoint->at(i);
-			int index1 = 0, index2 = 0;
-			bool isADoublon;
-			while (index1 == index2 || index1 == i || index2 == i || isADoublon)
-			{
-				isADoublon = false;
-
-				index1 = rand() % size;
-				index2 = rand() % size;
-
-				if (index2 < i && index1 < i)
-				{
-					maths::Triangle t = { p, delaunayPoint->at(index1), delaunayPoint->at(index2) };
-					maths::Triangle t1 = delaunayTriangles->at(index1);
-					if (t1.isDoublon(t))
-					{
-						isADoublon = true;
-						continue;
-					}
-					maths::Triangle t2 = delaunayTriangles->at(index2);
-					if (t2.isDoublon(t))
-					{
-						isADoublon = true;
-						continue;
-					}
-				}
-
-			}
-			delaunayTriangles->push_back({ p,delaunayPoint->at(index1), delaunayPoint->at(index2) });
-
+			Point otherPoint = delaunayPoint->at(j);
+			if (otherPoint.x < p.x)
+				break;
+			if (otherPoint.x > p.x)
+				continue;
+			if (otherPoint.y < p.y)
+				break;
+			if (otherPoint.y < p.y)
+				continue;
 		}
+		delaunayPoint->insert(delaunayPoint->begin()+j, p);
 	}
-	else
-		std::cout << "Not enought points (" << size << ")" << std::endl;
+
+
+	delaunayTriangles->clear();
+	for (int i = 0; i < size-2; i++)
+	{
+		Triangle t = { delaunayPoint->at(i), delaunayPoint->at(i + 1),delaunayPoint->at(i + 2) };
+		/*bool findIntersection = true;
+		while (findIntersection)
+		{
+			for (int j = 0; j < delaunayTriangles->size(); j++)
+			{
+				
+			}
+		}*/
+		
+
+		delaunayTriangles->push_back(t);
+	}
+
+
+		
+	/*delaunayPoint->clear();
+	for (int i = 0; i < size; i++)
+	{
+		Point p = polygon.getPoint(i);
+		int j = 0;
+		for (j = 0; j < delaunayPoint->size(); j++)
+		{
+			Point otherPoint = delaunayPoint->at(j);
+			if (otherPoint.y < p.y)
+				break;
+			if (otherPoint.y < p.y)
+				continue;
+			if (otherPoint.x < p.x)
+				break;
+			if (otherPoint.x > p.x)
+				continue;
+		}
+		delaunayPoint->insert(delaunayPoint->begin() + j, p);
+	}
+
+	delaunayTriangles->clear();
+	for (int i = 0; i < size - 2; i++)
+	{
+		Triangle t{ delaunayPoint->at(i), delaunayPoint->at(i + 1),delaunayPoint->at(i + 2) };
+		for (int i = delaunayTriangles)
+			delaunayTriangles->push_back();
+	}*/
 }
 
 Scene::Scene(int w, int h)
@@ -823,6 +889,7 @@ Scene::Scene(int w, int h)
 
 
 	this->delaunayTriangles = new std::vector<maths::Triangle>();
+	this->delaunayPoint = new std::vector<maths::Point>();
 
 	srand(time(NULL));
 
@@ -843,3 +910,38 @@ Scene::~Scene()
 {
 	g_BasicShader.DestroyProgram();
 }
+
+
+/*for (int i = 0; i < size; ++i)
+{
+maths::Point p = delaunayPoint->at(i);
+int index1 = 0, index2 = 0;
+bool isADoublon;
+while (index1 == index2 || index1 == i || index2 == i || isADoublon)
+{
+isADoublon = false;
+
+index1 = rand() % size;
+index2 = rand() % size;
+
+if (index2 < i && index1 < i)
+{
+maths::Triangle t = { p, delaunayPoint->at(index1), delaunayPoint->at(index2) };
+maths::Triangle t1 = delaunayTriangles->at(index1);
+if (t1.isDoublon(t))
+{
+isADoublon = true;
+continue;
+}
+maths::Triangle t2 = delaunayTriangles->at(index2);
+if (t2.isDoublon(t))
+{
+isADoublon = true;
+continue;
+}
+}
+
+}
+delaunayTriangles->push_back({ p,delaunayPoint->at(index1), delaunayPoint->at(index2) });
+
+}*/

@@ -69,9 +69,8 @@ class Scene
 	std::vector<maths::Point>* grahamScanPoints;
 
 	//Delaunay
-	std::vector<maths::Point>* delaunayPoint;
 	std::vector<maths::Triangle>* delaunayTriangles;
-
+	std::vector<maths::Point>* delaunayPoint;
 
 
 	float color[4];
