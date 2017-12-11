@@ -204,10 +204,10 @@ void Input::checkMouseClicks(int button, int state, int x, int y)
 
 	}
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && (sceneState == ENTER_POINTS_POLYGON  )) {
-		maths::Point p;
-		p.x = x;
-		p.y = y;
-		p.z = 0;
+		maths::Point *p = new maths::Point();
+		p->x = x;
+		p->y = y;
+		p->z = 0;
 		scene->addPoint(p);
 		//onMouse = 1;
 		glutPostRedisplay();

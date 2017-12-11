@@ -30,6 +30,7 @@
 #include <time.h>
 #include <stdlib.h> 
 #include <stdio.h>
+#include <chrono>
 
 class Scene
 {
@@ -69,8 +70,11 @@ class Scene
 	std::vector<maths::Point>* grahamScanPoints;
 
 	//Delaunay
-	std::vector<maths::Line>* delaunayLines;
-	std::vector<maths::Point>* delaunayPoint;
+	std::vector<maths::Line*>* lines;
+	std::vector<maths::Triangle*>* triangles;
+	std::vector<maths::Point*>* triangulationPoints;
+	std::vector<maths::Line*>*  triangulationLines;
+	
 
 
 	float color[4];
@@ -83,12 +87,10 @@ public:
 	void mainLoop();
 	void createMenu();
 	maths::Point* isVertexFromPolygon(maths::Polygon polygon, maths::Point pointTest);
-	bool isPointInPol(maths::Polygon pol, maths::Point p);
-	void cursorInPolygon(maths::Point p);
 	maths::Point* ConvertPointPixelToOpenGLUnit(maths::Point point);
 	void changeState(State state);
 	State getState();
-	void addPoint(maths::Point p);
+	void addPoint(maths::Point *p);
 	void setDrawWindow();
 	static void menuCallBack(int i);
 	void rotate_point(maths::Polygon *poly, float angle);
@@ -101,20 +103,22 @@ public:
 	float getHeight();
 	void unselectPoint(); 
 	void moveSelectedPoint(float x, float y);
-	void selectPolygon(float x, float y);
 	bool hasSelectedPoint();
 	bool hasSelectedPolygon();
 	void changeActiveTransformation(Transformation trans);
 	void applyTransformation(char key);
 
-	void triangularisation();
+	void triangularisation(bool delaunay);
+	maths::Line* createLine(maths::Point* p1, maths::Point* p2);
+	maths::Point* createPoint(float x, float y);
+	maths::Triangle* createTriangle(maths::Line* l1, maths::Line* l2, maths::Line* l3);
 	
 	
-	static int Orientation(maths::Point p, maths::Point q, maths::Point r);
+	static int Orientation(maths::Point* p, maths::Point* q, maths::Point* r);
 	static int Compare(const void *vp1, const void *vp2);
 
-	void RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result);
-	void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop);
+	void RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::Point*>& result);
+	void Scene::RunJarvis(std::vector<maths::Point*>& points, std::vector<maths::Point*>& envelop);
 };
 
 #endif // ! SCENE

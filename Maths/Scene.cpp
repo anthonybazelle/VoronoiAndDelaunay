@@ -4,7 +4,7 @@ using namespace maths;
 
 Scene* Scene::currentInstance = nullptr;
 
-maths::Point p0;
+maths::Point* p0;
 
 void Scene::drawCallBack()
 {
@@ -22,31 +22,11 @@ void Scene::flush()
 
 void Scene::moveSelectedPoint(float x, float y)
 {
-	Point p;
-	p.x = x;
-	p.y = y;
+	Point *p = new Point();
+	p->x = x;
+	p->y = y;
 	polygon.setPoint(p, pointSelected);
 	glutPostRedisplay();
-}
-
-
-void Scene::selectPolygon(float x, float y)
-{
-	if (state == DRAW || RUN_JARVIS_MARCH || DELAUNAY)
-	{
-		maths::Point p;
-		p.x = x;
-		p.y = y;
-		if (isPointInPol(polygon, p))
-		{
-			polygonSelected = true;
-			glutPostRedisplay();
-			return;
-		}
-	}
-	polygonSelected = false;
-	glutPostRedisplay();
-
 }
 
 bool Scene::hasSelectedPoint()
@@ -191,12 +171,12 @@ void Scene::applyTransformation(char key)
 	}
 }
 
-void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop)
+void Scene::RunJarvis(std::vector<maths::Point*>& points, std::vector<maths::Point*>& envelop)
 {
 	// On récupère le point le plus à gauche, s'il y en a plusieurs sur le même axe X on recupère celui qui est le plus bas sur cet axe
 	int l = 0;
 	for (int i = 1; i < points.size(); i++)
-		if (points[i].x < points[l].x || points[i].x == points[l].x && points[i].y < points[l].y)
+		if (points[i]->x < points[l]->x || points[i]->x == points[l]->x && points[i]->y < points[l]->y)
 			l = i;
 
 	
@@ -222,11 +202,11 @@ void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Poin
 	envelop.push_back(points[p]);
 }
 
-maths::Point nextToTop(std::stack<Point> &S)
+maths::Point* nextToTop(std::stack<Point*> &S)
 {
-	maths::Point p = S.top();
+	maths::Point *p = S.top();
 	S.pop();
-	maths::Point res = S.top();
+	maths::Point *res = S.top();
 	S.push(p);
 	return res;
 }
@@ -238,20 +218,20 @@ void Swap(maths::Point &p1, maths::Point &p2)
 	p2 = temp;
 }
 
-int Distance(Point p1, Point p2)
+int Distance(Point* p1, Point* p2)
 {
-	return (p1.x - p2.x)*(p1.x - p2.x) +
-		(p1.y - p2.y)*(p1.y - p2.y);
+	return (p1->x - p2->x)*(p1->x - p2->x) +
+		(p1->y - p2->y)*(p1->y - p2->y);
 }
 
 // Orientation du triplet ordonné (p, q, r).
 // 0 = p, q et r colinéaires
 // 1 = Sens horaire
 // 2 = Sens anti-horaire
-int Scene::Orientation(maths::Point p, maths::Point q, maths::Point r)
+int Scene::Orientation(maths::Point* p, maths::Point* q, maths::Point* r)
 {
-	float val = (q.y - p.y) * (r.x - q.x) -
-		(q.x - p.x) * (r.y - q.y);
+	float val = (q->y - p->y) * (r->x - q->x) -
+		(q->x - p->x) * (r->y - q->y);
 
 	if (val == 0) 
 		return 0;
@@ -263,27 +243,27 @@ int Scene::Compare(const void *vp1, const void *vp2)
 	maths::Point *p1 = (maths::Point *)vp1;
 	maths::Point *p2 = (maths::Point *)vp2;
 
-	int o = Orientation(p0, *p1, *p2);
+	int o = Orientation(p0, p1, p2);
 	if (o == 0)
-		return (Distance(p0, *p2) >= Distance(p0, *p1))? -1 : 1;
+		return (Distance(p0, p2) >= Distance(p0, p1))? -1 : 1;
 
 	return (o == 2)? -1: 1;
 }
 
 
-void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result)
+void Scene::RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::Point*>& result)
 {
 	// Comme pour Jarvis, on recupere le point le plus en bas à gauche
-	int ymin = points[0].y, min = 0;
+	int ymin = points[0]->y, min = 0;
 	for (int i = 1; i < points.size(); i++)
 	{
-		int y = points[i].y;
+		int y = points[i]->y;
 
-		if ((y < ymin) || (ymin == y && points[i].x < points[min].x))
-			ymin = points[i].y, min = i;
+		if ((y < ymin) || (ymin == y && points[i]->x < points[min]->x))
+			ymin = points[i]->y, min = i;
 	}
 
-	Swap(points[0], points[min]);
+	Swap(*points[0], *points[min]);
 
 	p0 = points[0];
 
@@ -307,7 +287,7 @@ void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::P
 	if (m < 3) return;
 
 	// Stack ou vector peu importe, à modifier ensuite p-e, mais pratique avec la stack
-	std::stack<maths::Point> stack;
+	std::stack<maths::Point*> stack;
 	stack.push(points[0]);
 	stack.push(points[1]);
 	stack.push(points[2]);
@@ -355,10 +335,10 @@ bool Scene::isPointSelected(float mX, float mY)
 		std::cout << "mx = " << mX <<"  mY=" << mY << std::endl;
 		for (int j = 0; j < polygon.getPoints()->size(); j++) 
 		{
-			maths::Point p = polygon.getPoints()->at(j);
+			maths::Point *p = polygon.getPoints()->at(j);
 
-			std::cout << "x=" << p.x << "   y=" << p.y << std::endl;
-			if (mX > p.x - nbX && mX<p.x + nbX && mY>p.y - nbY && mY < p.y + nbY)
+			std::cout << "x=" << p->x << "   y=" << p->y << std::endl;
+			if (mX > p->x - nbX && mX<p->x + nbX && mY>p->y - nbY && mY < p->y + nbY)
 			{
 				pointSelected = j;
 				polygonSelected = true;
@@ -411,74 +391,41 @@ void Scene::mainLoop()
 	{
 		if (!polygon.getPoints()->empty())
 		{
-			if (polygonSelected)
+			
+			unsigned int size = polygon.getPoints()->size();
+
+			Point *points= (Point*) malloc(size*sizeof(Point));
+			for (int i = 0; i < size; i++)
 			{
-				glUniform4f(colorID, 1.0,0.0,0.0,1.0);
-			}
-			else
-			{
-				glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+				points[i] = *(polygon.getPoint(i));
 			}
 
-			if (pointSelected != -1 && polygonSelected)
-			{
-				const maths::Point *points = polygon.getPoints()->data();
-				unsigned int size = pointSelected;
+			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glEnableVertexAttribArray(position_location);
 
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
-				glEnableVertexAttribArray(position_location);
-				glPointSize(5);
-				glDrawArrays(GL_POINTS, 0, size);
-				glDisableVertexAttribArray(position_location);
+			glPointSize(5);
 
-				glUniform4f(colorID, 0.0, 1.0, 0.0, 1.0);
-				size = 1;
+			glDrawArrays(GL_POINTS, 0, size);
+			glDisableVertexAttribArray(position_location);
 
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, &points[pointSelected]);
-				glEnableVertexAttribArray(position_location);
-				glPointSize(5);
-				glDrawArrays(GL_POINTS, 0, size);
-				glDisableVertexAttribArray(position_location);
+			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glEnableVertexAttribArray(position_location);
 
-				glUniform4f(colorID, 1.0, 0.0, 0.0, 1.0);
-				size = polygon.getPoints()->size()- pointSelected-1;
+			glPointSize(5);
 
-				if (size > 0)
-				{
-					glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, &points[pointSelected+1]);
-					glEnableVertexAttribArray(position_location);
-					glPointSize(5);
-					glDrawArrays(GL_POINTS, 0, size);
-					glDisableVertexAttribArray(position_location);
-				}
-			}
-			else
-			{
-				const maths::Point *points = polygon.getPoints()->data();
-				unsigned int size = polygon.getPoints()->size();
-
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
-				glEnableVertexAttribArray(position_location);
-
-				glPointSize(5);
-
-				glDrawArrays(GL_POINTS, 0, size);
-				glDisableVertexAttribArray(position_location);
-			}
-				
-
+			glDrawArrays(GL_LINE_LOOP, 0, size);
+			glDisableVertexAttribArray(position_location);
 		}
 
 	}
 	else if (state == ENTER_POINTS_POLYGON)
 	{
 
-		const maths::Point *points = polygon.getPoints()->data();
 		unsigned int size = polygon.getPoints()->size();
 
 		for (int i = 0; i < size; i++)
 		{
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, &points[i]);
+			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, polygon.getPoint(i));
 			glEnableVertexAttribArray(position_location);
 
 			glPointSize(10);
@@ -489,14 +436,48 @@ void Scene::mainLoop()
 	}
 	else if(state == RUN_JARVIS_MARCH)
 	{
-		if(polygon.getPoints()->empty())
+		//if(polygon.getPoints()->empty())
+		//{
+		//	std::cerr << "You forgot to add some points for the Jarvis march algorithm !" << std::endl;
+		//}
+		//else
+		//{
+		//	// redondance ici a cause des else if
+		//	const maths::Point *points = this->polygon.getPoints()->data();
+
+		//	glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+		//	glEnableVertexAttribArray(position_location);
+
+		//	glPointSize(5);
+
+		//	glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
+		//	glDisableVertexAttribArray(position_location);
+
+		//	this->jarvisPoints->clear();
+		//	RunJarvis(*(this->polygon.getPoints()), *(this->jarvisPoints));
+		//	//ConvexHull(*(this->dataPointsJarvis), (*this->jarvisPoints));
+		//	//DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
+
+		//	if(!this->jarvisPoints->empty())
+		//	{
+		//		glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->jarvisPoints->data());
+		//		glEnableVertexAttribArray(position_location);
+
+		//		glPointSize(5);
+
+		//		glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
+		//		glDisableVertexAttribArray(position_location);
+		//	}
+		//}
+
+		if (polygon.getPoints()->size()<2)
 		{
-			std::cerr << "You forgot to add some points for the Jarvis march algorithm !" << std::endl;
+			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
 		}
 		else
 		{
 			// redondance ici a cause des else if
-			const maths::Point *points = this->polygon.getPoints()->data();
+			const maths::Point *points = *(this->polygon.getPoints()->data());
 
 			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
 			glEnableVertexAttribArray(position_location);
@@ -506,21 +487,13 @@ void Scene::mainLoop()
 			glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
 			glDisableVertexAttribArray(position_location);
 
-			this->jarvisPoints->clear();
-			RunJarvis(*(this->polygon.getPoints()), *(this->jarvisPoints));
-			//ConvexHull(*(this->dataPointsJarvis), (*this->jarvisPoints));
-			//DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
+			triangularisation(false);
 
-			if(!this->jarvisPoints->empty())
-			{
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->jarvisPoints->data());
-				glEnableVertexAttribArray(position_location);
+			
 
-				glPointSize(5);
 
-				glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
-				glDisableVertexAttribArray(position_location);
-			}
+			
+
 		}
 	}
 	else if (state == DELAUNAY)
@@ -531,31 +504,21 @@ void Scene::mainLoop()
 		}
 		else
 		{
-			// redondance ici a cause des else if
-			const maths::Point *points = this->polygon.getPoints()->data();
+			for (int i = 0; i < triangulationLines->size(); i++)
+			{
+				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, triangulationLines->at(i));
+				glEnableVertexAttribArray(position_location);
 
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
-			glEnableVertexAttribArray(position_location);
+				glPointSize(5);
 
-			glPointSize(5);
-
-			glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
-			glDisableVertexAttribArray(position_location);
-
-			triangularisation();
-			
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, delaunayLines->data());
-			glEnableVertexAttribArray(position_location);
-
-			glPointSize(5);
-
-			glDrawArrays(GL_LINES, 0, delaunayLines->size()*2);
-			glDisableVertexAttribArray(position_location);
+				glDrawArrays(GL_LINE, 0, 2);
+				glDisableVertexAttribArray(position_location);
+			}
 		}
 	}
 	else if(state == RUN_GRAHAM_SCAN)
 	{
-		const maths::Point *points = this->polygon.getPoints()->data();
+		const maths::Point *points = *(this->polygon.getPoints()->data());
 
 		glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
 		glEnableVertexAttribArray(position_location);
@@ -567,7 +530,7 @@ void Scene::mainLoop()
 
 		if(this->polygon.getPoints()->size() > 3)
 		{
-			this->RunGrahamScan(*(this->polygon.getPoints()), *(this->grahamScanPoints));
+			//this->RunGrahamScan((this->polygon.getPoints()), *(this->grahamScanPoints));
 
 			if(!this->grahamScanPoints->empty())
 			{
@@ -580,6 +543,8 @@ void Scene::mainLoop()
 				glDisableVertexAttribArray(position_location);
 			}
 		}
+
+		
 	}
 
 	glUseProgram(0);
@@ -608,19 +573,19 @@ State Scene::getState()
 	return state;
 }
 
-void Scene::addPoint(maths::Point p)
+void Scene::addPoint(maths::Point* p)
 {
 	switch (state)
 	{
 	case ENTER_POINTS_POLYGON:
 			//std::cout << "point added x=" << p.x << " y=" << p.y << std::endl;
-			p.y = height - p.y;
-			p.x -= width / 2;
-			p.y -= height / 2;
-			p.x /= width / 2;
-			p.y /= height / 2;
+			p->y = height - p->y;
+			p->x -= width / 2;
+			p->y -= height / 2;
+			p->x /= width / 2;
+			p->y /= height / 2;
 			//std::cout << "point normalized x=" << p.x << " y=" << p.y << std::endl;
-
+			
 			polygon.addPoint(p);
 
 		break;
@@ -659,9 +624,9 @@ maths::Point* Scene::isVertexFromPolygon(maths::Polygon polygon, maths::Point po
 {
 	for (int i = 0; i < polygon.getPoints()->size(); i++)
 	{
-		if (pointTest.x == polygon.getPoints()->at(i).x && pointTest.y == polygon.getPoints()->at(i).y)
+		if (pointTest.x == polygon.getPoints()->at(i)->x && pointTest.y == polygon.getPoints()->at(i)->y)
 		{
-			return &(polygon.getPoints()->at(i));
+			return (polygon.getPoints()->at(i));
 		}
 	}
 
@@ -680,31 +645,6 @@ maths::Point* Scene::ConvertPointPixelToOpenGLUnit(maths::Point point)
 	return pointOpenGL;
 }
 
-bool Scene::isPointInPol(maths::Polygon pol, maths::Point p)
-{
-	pol.calculateNormals();
-	int nbPointWin = pol.getPoints()->size();
-
-	for (int j = 0; j < nbPointWin; j++)
-	{
-		maths::Point p1 = pol.getPoints()->at(j);
-
-		if (!Math::isPointVisible(p, p1, pol.getNormals()->at(j)))
-			return false;
-	}
-	return true;
-}
-
-void Scene::cursorInPolygon(maths::Point p)
-{
-	bool dog = isPointInPol(polygon, p);
-	std::cout << "test" << std::endl;
-	if (dog == true)
-	{
-		stackPolygonClicked->push_back(polygon);
-	}
-}
-
 void Scene::scalePoint(maths::Polygon *poly, float ratio)
 {
 	float pivotX = 0;
@@ -714,8 +654,8 @@ void Scene::scalePoint(maths::Polygon *poly, float ratio)
 
 	for (int i = 0; i < nbPoints; i++)
 	{
-		pivotX += poly->getPoints()->at(i).x;
-		pivotY += poly->getPoints()->at(i).y;
+		pivotX += poly->getPoints()->at(i)->x;
+		pivotY += poly->getPoints()->at(i)->y;
 	}
 
 	pivotX = pivotX / nbPoints;
@@ -725,17 +665,17 @@ void Scene::scalePoint(maths::Polygon *poly, float ratio)
 
 	for (int i = 0; i <poly->getPoints()->size(); i++)
 	{
-		Point p = poly->getPoints()->at(i);
+		Point *p = poly->getPoints()->at(i);
 		// application formule
 		Point p2;
-		p2.x = p.x- pivotX;
-		p2.y = p.y - pivotY;
+		p2.x = p->x- pivotX;
+		p2.y = p->y - pivotY;
 
 		p2.x *= ratio;
 		p2.y *= ratio;
 
-		p.x = pivotX + p2.x;
-		p.y = pivotY + p2.y;
+		p->x = pivotX + p2.x;
+		p->y = pivotY + p2.y;
 
 		poly->setPoint(p, i);
 	}
@@ -746,10 +686,10 @@ void Scene::translatePoint(maths::Polygon *poly, float translateX, float transla
 {
 	for (int i = 0; i <poly->getPoints()->size(); i++)
 	{
-		Point p = poly->getPoints()->at(i);
+		Point *p = poly->getPoints()->at(i);
 		// application formule
-		p.x = p.x + translateX;
-		p.y = p.y + translateY;
+		p->x = p->x + translateX;
+		p->y = p->y + translateY;
 
 		poly->setPoint(p, i);
 	}
@@ -768,8 +708,8 @@ void Scene::rotate_point(maths::Polygon *poly,float angle)
 
 	for (int i = 0; i < nbPoints ; i++)
 	{
-		pivotX += poly->getPoints()->at(i).x;
-		pivotY += poly->getPoints()->at(i).y;
+		pivotX += poly->getPoints()->at(i)->x;
+		pivotY += poly->getPoints()->at(i)->y;
 	}
 
 	pivotX = pivotX / nbPoints;
@@ -777,17 +717,17 @@ void Scene::rotate_point(maths::Polygon *poly,float angle)
 
 	for (int i = 0; i <poly->getPoints()->size() ;i++ )
 	{
-		Point p = poly->getPoints()->at(i);
+		Point *p = poly->getPoints()->at(i);
 		// application formule
-		p.x -= pivotX;
-		p.y -= pivotY;
+		p->x -= pivotX;
+		p->y -= pivotY;
 
 		// rotation du point
-		float xnew = p.x * c - p.y * s;
-		float ynew = p.x * s + p.y * c;
+		float xnew = p->x * c - p->y * s;
+		float ynew = p->x * s + p->y * c;
 
-		p.x = xnew + pivotX;
-		p.y = ynew + pivotY;
+		p->x = xnew + pivotX;
+		p->y = ynew + pivotY;
 
 		poly->setPoint(p, i);
 	}
@@ -795,35 +735,151 @@ void Scene::rotate_point(maths::Polygon *poly,float angle)
 
 }
 
-void Scene::triangularisation()
+void Scene::triangularisation(bool makeDelaunay)
 {
-	int size = polygon.getPoints()->size();
-
-	delaunayLines->clear();
-
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < polygon.getPoints()->size(); i++)
 	{
-		Point p = polygon.getPoints()->at(i);
-		for (int j = i+1 ; j < size; j++)
+		Point *p1 = polygon.getPoint(i);
+		int j;
+		for (j = 0; j < triangulationPoints->size(); j++)
 		{
-			Line l = { p, polygon.getPoints()->at(j) };
-			bool findIntersection = false;
-			for (int k = 0; k < delaunayLines->size();k++)
+			Point *p2 = triangulationPoints->at(j);
+			if (p2->x == p1->x)
 			{
-				findIntersection = l.hasIntersection(delaunayLines->at(k));
-				if (findIntersection)
-				{
+				if (p2->y >= p1->x)
 					break;
-				}
 			}
-			if (!findIntersection)
+			if (p2->x > p1->x)
 			{
-				delaunayLines->push_back(l);
+				break;
 			}
 		}
+		triangulationPoints->insert(triangulationPoints->begin() + j, p1);
 	}
 
+	int size = triangulationPoints->size();
 
+	triangulationLines->clear();
+	triangles->clear();
+	if (size < 2)
+		return;
+	Line *previousLine = createLine(triangulationPoints->at(0), triangulationPoints->at(1));
+	triangulationLines->push_back(previousLine);
+	int i = 2;
+	while (previousLine->isCol(triangulationPoints->at(i)) && i<size)
+	{
+		previousLine = createLine(previousLine->p2, triangulationPoints->at(i));
+		triangulationLines->push_back(previousLine);
+		i++;
+	}
+	if (i == size)
+		return;
+	Point *p = triangulationPoints->at(i);
+	for (int i = 0; i < triangulationLines->size(); i++)
+	{
+		Line *l1  = triangulationLines->at(i);
+		Line *l2 = createLine(l1->p1, p);
+		Line *l3 = createLine(l1->p2, p);
+		Triangle *t = createTriangle(l1, l2, l3);
+
+		
+		
+		triangles->push_back(t);
+	}
+
+	/*for (; i < triangulationPoints->size(); i++)
+	{
+		Point *p = triangulationPoints->at(i);
+		for (int j = 0; j < triangulationLines->size(); j++)
+		{
+
+		}
+	}*/
+
+}
+
+void updateLines(Triangle* t)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		Line *l, *l2;
+		if (i == 0)
+		{
+			l = t->l1;
+			l2 = t->l2;
+		}
+		else if (i == 1)
+		{
+			l = t->l2;
+			l2 = t->l1;
+		}
+		else
+		{
+			l = t->l3;
+			l2 = t->l1;
+		}
+		Point *p;
+		if (!l->p1->equals2D(l2->p1) && l->p2->equals2D(l2->p1))
+			p = l2->p1;
+		else
+			p = l2->p2;
+		float nb = sign();
+
+
+	}
+}
+
+Line* Scene::createLine(Point* p1, Point* p2)
+{
+	Line* l = new Line();
+	l->p1 = p1;
+	l->p2 = p2;
+	lines->push_back(l);
+	return l;
+}
+
+
+Point* Scene::createPoint(float x, float y)
+{
+	Point* p = new Point();
+	p->x = x;
+	p->y = y;
+	return p;
+}
+
+Triangle* Scene::createTriangle(Line* l1, Line* l2, Line* l3)
+{
+	Triangle* t = new Triangle();
+	t->l1 = l1;
+	t->l2 = l2;
+	t->l3 = l3;
+	return t;
+}
+
+
+float sign(Line* l, Point* p3)
+{
+	Point *p1, *p2;
+	if (l->p1->x < l->p2->x)
+	{
+		p1 = l->p1;
+	}
+	else if (l->p1->x > l->p2->x)
+	{
+		p2 = l->p2;
+	}
+	else
+	{
+		if (l->p1->y < l->p2->y)
+		{
+			p1 = l->p1;
+		}
+		else
+		{
+			p2 = l->p2;
+		}
+	}
+	return (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y);
 }
 
 Scene::Scene(int w, int h)
@@ -843,8 +899,10 @@ Scene::Scene(int w, int h)
 	this->grahamScanPoints = new std::vector<maths::Point>();
 
 
-	this->delaunayLines = new std::vector<maths::Line>();
-	this->delaunayPoint = new std::vector<maths::Point>();
+	lines = new std::vector<maths::Line*>(); 
+	triangles = new std::vector<maths::Triangle*>();
+	triangulationPoints = new std::vector<maths::Point*>();
+	triangulationLines = new std::vector<maths::Line*>();
 
 	srand(time(NULL));
 

@@ -90,20 +90,6 @@ maths::Point Math::getIntersection2(const maths::Point p1, const maths::Point p2
 	return result;
 }
 
-bool Math::isPointInPol(maths::Polygon pol, maths::Point p)
-{
-	pol.calculateNormals();
-	int nbPointWin = pol.getPoints()->size();
-	//ici ton point p qui correspond à là ou t'a cliqué
-	for (int j = 0; j < nbPointWin; j++)
-	{
-		maths::Point p1 = pol.getPoints()->at(j);
-
-		if (!Math::isPointVisible(p, p1, pol.getNormals()->at(j)))
-			return false;
-	}
-	return true;
-}
 
 float Math::round(float nb)
 {

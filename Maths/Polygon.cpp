@@ -2,59 +2,19 @@
 
 float g_Knots[] = { 0.0f,0.0f,0.0f,0.0f,0.25f,0.5f,0.75f,1.0f,1.0f,1.0f,1.0f };
 
-void maths::Polygon::calculateNormals()
-{
-	if (normals->empty() && points->size() > 1)
-	{
-		int size = points->size();
-		for (int i = 0; i < size ; i++)
-		{
-			maths::Point n;
-			maths::Point p1= points->at(i);
-			maths::Point p2;
-			if (i == size - 1)
-				p2 = points->at(0);
-			else 
-				p2 = points->at(i+1);
-			if (sensTrigo)
-			{
-				n.x = (p1.y - p2.y);
-				n.y = -(p1.x - p2.x);
-			}	
-			else
-			{
-				n.x = -(p1.y - p2.y);
-				n.y = (p1.x - p2.x);
-			}
-			normals->push_back(n);
-		}
-	}
-}
 
-void maths::Polygon::calculateVectors()
-{
-	if (vectors->empty() && points->size() > 1)
-	{
-		for (int i = 1; i < points->size(); i++)
-		{
-			maths::Point v;
-			v.x = (points->at(i).x - points->at(i-1).x);
-			v.y = (points->at(i).y - points->at(i-1).y);
-			vectors->push_back(v);
-		}
-	}
-}
 
-void maths::Polygon::addPoint(maths::Point p)
+
+void maths::Polygon::addPoint(maths::Point* p)
 {
 	if(points->size()==1)
 	{
-		sensTrigo = p.x < points->at(0).x;
+		sensTrigo = p->x < points->at(0)->x;
 	}
 	bool find = false;
 	for (int i = 0; i < points->size(); i++)
 	{
-		if (points->at(i).equals2D(p))
+		if (points->at(i)->equals2D(p))
 		{
 			std::cout << "Point already in polygon" << std::endl;
 			return;
@@ -65,7 +25,7 @@ void maths::Polygon::addPoint(maths::Point p)
 	visibility->push_back(true);
 }
 
-void maths::Polygon::addPoint(maths::Point p, int index)
+void maths::Polygon::addPoint(maths::Point* p, int index)
 {
 	points->insert(points->begin()+index, p);
 	visibility->insert(visibility->begin() + index, true);
@@ -115,7 +75,7 @@ bool maths::Polygon::isPointVisible(int index)
 	return visibility->at(index);
 }
 
-std::vector<maths::Point>* maths::Polygon::getPoints()
+std::vector<maths::Point*>* maths::Polygon::getPoints()
 {
 	return points;
 }
@@ -125,7 +85,7 @@ const std::vector<maths::Point>* maths::Polygon::getNormals()
 	return normals;
 }
 
-void maths::Polygon::setPoint(maths::Point p, int indice)
+void maths::Polygon::setPoint(maths::Point* p, int indice)
 {
 	this->points->at(indice) = p;
 
@@ -141,7 +101,7 @@ void maths::Polygon::setPoint(maths::Point p, int indice)
 
 maths::Polygon::Polygon()
 {
-	points = new std::vector<maths::Point>();
+	points = new std::vector<maths::Point*>();
 	normals = new std::vector<maths::Point>();
 	vectors = new std::vector<maths::Point>();
 	bezierPoints = new std::vector<maths::Point>();
@@ -173,69 +133,10 @@ maths::Polygon* maths::Polygon::getInPolygon()
 	return inPolygon;
 }
 
-void maths::Polygon::recalculateBezierPointsCoxDeBoor()
-{
-	bezierPoints->clear();
-	for (int i = 0; i < points->size(); i++)
-	{
-		bezierPoints->push_back(points->at(i));
-	}
-
-	g_num_cvs = points->size();
-	g_degree = 3;
-	g_order = g_degree + 1;
-	g_num_knots = g_num_cvs + g_order;
-
-	std::vector<maths::Point> *tmp = new std::vector<maths::Point>();
-
-	for (int i = 0; i != bezierRecursion; ++i) {
-		recursiveRecalculateBezierPointsCoxDeBoor(i, tmp);
-	}
-
-	bezierPoints->clear();
-	for (int i = 0; i < tmp->size(); i++)
-	{
-		bezierPoints->push_back(tmp->at(i));
-	}
-	
-	delete tmp;
-}
-
-maths::Point maths::Polygon::calculateBezierPoints(double t) {
-	maths::Point P;
-	P.x = 0; P.y = 0;
-	int size = points->size();
-	for (int i = 0; i<size; i++)
-	{
-		P.x = P.x + binomial_coff((float)(size - 1), (float)i) * pow(t, (double)i) * pow((1 - t), (size - 1 - i)) * points->at(i).x;
-		P.y = P.y + binomial_coff((float)(size - 1), (float)i) * pow(t, (double)i) * pow((1 - t), (size - 1 - i)) * points->at(i).y;
-	}
-	return P;
-}
-
-void maths::Polygon::recalculateBezierPoints(int width, int height)
-{
-	if (points->size() <= 0)
-		return;
-
-	bezierPoints->clear();
-	maths::Point p1 = points->at(0);
-	bezierPoints->push_back(p1);
-	double step = 0.2 / bezierRecursion;
-	for (double t = 0.0; t <= 1.0; t += step)
-	{
-		Point p2 = calculateBezierPoints( t);
-
-		bezierPoints->push_back(p2);
-		p1 = p2;
-	}
-	bezierPoints->push_back(points->at(points->size()-1));
-}
 
 
 
-
-maths::Point maths::Polygon::getPoint(int i)
+maths::Point* maths::Polygon::getPoint(int i)
 {
 	return points->at(i);
 }
@@ -337,4 +238,20 @@ std::vector<maths::Point>* maths::Polygon::getBezierPoints()
 
 maths::Polygon::~Polygon()
 {
+}
+
+float maths::Triangle::sign(Point* p1, Point* p2, Point* p3)
+{
+	return (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y);
+}
+
+bool maths::Triangle::pointInTriangle(Point* pt)
+{
+	bool b1, b2, b3;
+
+	b1 = sign(pt, l1->p1, l1->p2) < 0.0f;
+	b2 = sign(pt, l2->p1, l2->p2) < 0.0f;
+	b3 = sign(pt, l3->p1, l3->p2) < 0.0f;
+
+	return ((b1 == b2) && (b2 == b3));
 }

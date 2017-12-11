@@ -1,0 +1,24 @@
+#include <windows.h>
+
+#include "resource.h"
+
+LEMENU MENU
+BEGIN
+  POPUP "Fichier"
+    BEGIN
+       MENUITEM "Propriétés...", IDM_PROP
+       MENUITEM SEPARATOR
+       MENUITEM "Quitter", IDM_QUIT
+    END
+END
+
+DIALOG1 DIALOG
+    60, 70, 175, 80
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+                                                           CAPTION "Propriétés"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 36, 52, 42, 12
+    PUSHBUTTON "Cancel", IDCANCEL, 96, 52, 42, 12
+    AUTOCHECKBOX "Carré visible ", ID_CB1, 60, 15, 80, 15
+    AUTOCHECKBOX "Cercle visible", ID_CB2, 60, 30, 80, 15
+END
