@@ -33,6 +33,7 @@ Input::Input(Scene *s)
 	for (int i = 0; i < 26; i++)
 		letters[i] = NONE;
 	scene = s;
+	deletePoint = false;
 }
 
 
@@ -105,65 +106,50 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 	std::cout << "Keypressed : " << (char)touche << std::endl;
 	switch (touche)
 	{
-	case 'a':
-		std::cout << "change state : ENTER_POINTS_POLYGON" << std::endl;
-		scene->changeState(ENTER_POINTS_POLYGON);
-		glutPostRedisplay();
-		break;
-	case 'j':
-		std::cout << "change state : RUN_JARVIS" << std::endl;
-		scene->changeState(RUN_JARVIS_MARCH);
-		glutPostRedisplay();
-		break;
-	case 'e':
-		std::cout << "change state : DRAW" << std::endl;
-		scene->changeState(DRAW);
-		glutPostRedisplay();
-		break;
-	case 'w':
-		std::cout << "ACTIVATE TRANSLATION" << std::endl;
-		scene->changeActiveTransformation(TRANSLATION);
-		glutPostRedisplay();
-		break;
-	case 'x':
-		std::cout << "ACTIVATE ROTATION" << std::endl;
-		scene->changeActiveTransformation(ROTATION);
-		glutPostRedisplay();
-		break;
-	case 'c':
-		std::cout << "ACTIVATE SCALE" << std::endl;
-		scene->changeActiveTransformation(SCALE);
-		glutPostRedisplay();
-		break;
-	case 'v':
-		std::cout << "UNATIVE ALL" << std::endl;
-		scene->changeActiveTransformation(NO_TRANS);
-		glutPostRedisplay();
-		break;
-	case 'z':
-		scene->applyTransformation(touche);
-		glutPostRedisplay();
-		break;
-	case 'q':
-		scene->applyTransformation(touche);
-		glutPostRedisplay();
-		break;
-	case 's':
-		scene->applyTransformation(touche);
-		glutPostRedisplay();
-		break;
 	case 'd':
-		scene->applyTransformation(touche);
+		deletePoint = !deletePoint;
+		break;
+	case '1':
+		std::cout << "change state : POINT" << std::endl;
+		scene->changeState(VIEW_POINT);
 		glutPostRedisplay();
 		break;
-	case 'g':
-		std::cout << "change state : RUN_GRAHAM_SCAN" << std::endl;
-		scene->changeState(RUN_GRAHAM_SCAN);
+	case '2':
+		std::cout << "change state : POLYGONE" << std::endl;
+		scene->changeState(POLYGONE);
 		glutPostRedisplay();
 		break;
-	case 'h':
-		std::cout << "delaunay" << std::endl;
+	case '3':
+		std::cout << "change state : JARVIS" << std::endl;
+		scene->changeState(JARVIS);
+		scene->RunJarvis();
+		glutPostRedisplay();
+		break;
+	case '4':
+		std::cout << "change state : GRAHAM" << std::endl;
+		scene->changeState(GRAHAM);
+		scene->RunGraham();
+		glutPostRedisplay();
+		break;
+	case '5':
+		std::cout << "change state : TRIANGULATION" << std::endl;
+		scene->changeState(TRIANGULATION);
+		scene->getTools()->triangulation();
+		glutPostRedisplay();
+		break;
+	case '6':
+		std::cout << "change state : DELAUNAY" << std::endl;
 		scene->changeState(DELAUNAY);
+		scene->getTools()->triangulation();
+		scene->getTools()->delaunayTriangulation();
+		glutPostRedisplay();
+		break;
+	case '7':
+		std::cout << "change state : VORONOI" << std::endl;
+		scene->changeState(VORONOI);
+		scene->getTools()->triangulation();
+		scene->getTools()->delaunayTriangulation();
+		scene->getTools()->voronoiAlgo();
 		glutPostRedisplay();
 		break;
 	default:
@@ -174,56 +160,50 @@ void Input::checkKeyboardInputs(unsigned char  touche, int x, int y)
 void Input::checkMouseClicks(int button, int state, int x, int y)
 {
 	State sceneState = scene->getState();
-	if ((sceneState == DRAW || sceneState== RUN_JARVIS_MARCH || DELAUNAY )&& button == GLUT_LEFT_BUTTON)
+	if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON)
 	{
-		if (state == GLUT_DOWN)
+		mouseButtons[0] = PRESSED;
+		if (scene->hasSelectedPoint())
 		{
-			mouseButtons[0] = PRESSED;
-			if (scene->hasSelectedPoint())
-			{
-				scene->unselectPoint();
-			}
-			else
-			{
-				if (scene->isPointSelected(mouseX, mouseY))
-				{
-					std::cout << "point selected" << std::endl;
-				}
-			}
-
-
-			glutPostRedisplay();
-			std::cout << "mouseButton pressed"<<std::endl;
+			scene->unselectPoint();
 		}
 		else
 		{
-			mouseButtons[0] = CLICKED;
-			glutPostRedisplay();
-			std::cout << "mouseButton up" << std::endl;
+			if (scene->isPointSelected(mouseX, mouseY))
+			{
+				std::cout << "point selected" << std::endl;
+			}
 		}
 
+
+		glutPostRedisplay();
+		std::cout << "mouseButton pressed" << std::endl;
 	}
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && (sceneState == ENTER_POINTS_POLYGON  )) {
+	
+	else if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN && mouseButtons[0]!=PRESSED) {
 		maths::Point *p = new maths::Point();
 		p->x = x;
 		p->y = y;
-		p->z = 0;
-		scene->addPoint(p);
+		if (deletePoint)
+		{
+			scene->removePoint(p);
+		}
+		else
+		{
+			scene->addPoint(p);
+		}
+		
+		
 		//onMouse = 1;
 		glutPostRedisplay();
 	}
-
-	/*if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && scene->getState() == DRAW)
+	else if(state == GLUT_UP && button == GLUT_LEFT_BUTTON)
 	{
-		maths::Point p;
-		p.x = x;
-		p.y = y;
-
-		
-		scene->cursorInPolygon(p);
-
+		mouseButtons[0] = CLICKED;
 		glutPostRedisplay();
-	}*/
+		std::cout << "mouseButton up" << std::endl;
+	}
+
 }
 
 bool Input::mouseHasMove()

@@ -6,151 +6,88 @@
 
 namespace maths
 {
-	class Triangle;
-	class Line;
 
-	struct Point
+
+	struct Point;
+	struct Sommet;
+	struct Cote;
+	struct Segment;
+	struct Triangle;
+	struct Cercle;
+
+
+	
+
+	typedef struct Point
 	{
 		float x;
 		float y;
-		float z;
+	} Point;
 
 
-		float Point::Distance(maths::Point p2)
-		{
-			return sqrt(pow(p2.x - x, 2) + pow(p2.y - y, 2));
-		}
-
-		float Point::Angle(maths::Point indice2)
-		{
-			return atan2(y - indice2.y, x - indice2.x);
-		}
-
-		bool equals2D(Point* p)
-		{
-			return (p->x == x && p->y == y);
-		}
-	};
-
-	class Triangle
+	typedef struct Sommet
 	{
-	public:
-		Line *l1, *l2, *l3;
+		Point* p;
+		Cote* a;
 
-		float sign(Point* p1, Point* p2, Point* p3);
-		bool pointInTriangle(Point* pt);
-	};
+		Sommet() : p(nullptr), a(nullptr) {};
 
-	struct Droite
+		Sommet(Point* point) : p(point), a(nullptr) {};
+	} Apex;
+
+	
+
+	typedef struct Cote
 	{
-		float a, b;
+		Sommet* s1;
+		Sommet* s2;
+		Triangle* td;
+		Triangle* tg;
 
-		Point intersection(Droite droite)
-		{
-			Point p = { -2,-2,0 };
-			if (a == droite.a)
-				return p;
-			float x = (droite.b - b) / (a - droite.a);
-			p.x = x;
-			p.y = a*p.x + b;
+		Cote() : s1(nullptr), s2(nullptr), td(nullptr), tg(nullptr) {};
 
-			return p;
-		}
-	};
+		Cote(Sommet* s1, Sommet* s2) : s1(s1), s2(s2), td(nullptr), tg(nullptr) {};
+	} Edge;
 
-	class Line
+	
+
+	typedef struct Segment
 	{
-	public:
-		Point *p1, *p2;
-		Triangle *droite, *gauche;
+		Point p1;
+		Point p2;
 
-		Point middle()
-		{
-			Point *first = firstPoint(), second = *secondPoint();
-			return{ (first->x + second.x) / 2, (first->y + second.y) / 2 };
-		}
+		Segment(Point p1, Point p2) : p1(p1), p2(p2) {};
+	} Bounded_Edge;
 
-		bool isVertical()
-		{
-			return p1->x == p2->x;
-		}
+	typedef struct Triangle
+	{
+		Cote* a1;
+		Cote* a2;
+		Cote* a3;
 
-		bool isHorizontal()
-		{
-			return p1->y == p2->y;
-		}
+		Triangle() : a1(nullptr), a2(nullptr), a3(nullptr) {};
 
-		bool isCol(Point* p)
-		{
-			if (isVertical())
-				return p->x == p1->x;
-			return p->y == coefDirecteur()*p->x + num();
-		}
+		Triangle(Cote* e1, Cote* e2, Cote* e3) : a1(e1), a2(e2), a3(e3) {};
+	} Triangle;
 
-		//attention ne marche par avec les droite horozontales
-		bool equals(Line* line)
-		{
-			return ((p1->equals2D(line->p1) && p2->equals2D(line->p2)) || (p2->equals2D(line->p1) && p1->equals2D(line->p2)));
-		}
 
-		float coefDirecteur()
-		{
-			if (p1->y==p2->y)
-			{
-				return 0;
-			}
-			if (p1->x < p2->x)
-			{
-				return (p2->y - p1->y) / (p2->x - p1->x);
-			}
-			else if (p1->x > p2->x)
-			{
-				return (p1->y - p2->y) / (p1->x - p2->x);
-			}
-			return -1;
-		}
+	typedef struct Cercle
+	{
+		Point center;
+		float radius;
+	} Circle;
 
-		float num(float coef)
+	struct points_comparator
+	{
+		inline bool operator() (const Point& p1, const Point& p2)
 		{
-			if (coef = -1)
-				return -1;
-			return p1->y - coef*p1->x;
-		}
-
-		float num()
-		{
-			return num(coefDirecteur());
-		}
-
-		Point* firstPoint()
-		{
-			if (p1->x < p2->x)
-				return p1;
-			else return p2;
-		}
-
-		Point* secondPoint()
-		{
-			if (p1->x < p2->x)
-				return p2;
-			else return p1;
-		}
-
-		Point* firstPointY()
-		{
-			if (p1->y < p2->y)
-				return p1;
-			else return p2;
-		}
-
-		Point* secondPointY()
-		{
-			if (p1->y < p2->y)
-				return p2;
-			else return p1;
+			if (p1.x < p2.x) return true;
+			if (p1.x > p2.x) return false;
+			if (p1.y < p2.y) return true;
+			return false;
 		}
 	};
-
+	
 	struct Color
 	{
 		float r;
@@ -201,7 +138,14 @@ namespace maths
 		int factorial(int n);
 		float binomial_coff(float n, float k);
 	};
+
+	bool operator==(const Point& p1, const Point& p2);
+	bool operator==(const Sommet& s1, const Sommet& s2);
+	bool operator==(const Cote& a1, const Cote& a2);
+	bool operator==(const Triangle& t1, const Triangle& t2);
 }
+
+
 
 
 #endif // !MATHS_POLYGON

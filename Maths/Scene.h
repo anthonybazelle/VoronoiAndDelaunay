@@ -1,3 +1,4 @@
+
 #ifndef  DEF_SCENE
 #define DEF_SCENE
 
@@ -18,12 +19,12 @@
 
 #include "freeglut.h"
 
-#include "CVecteur.h"
 #include "../common/EsgiShader.h"
 #include "Input.h"
 
 #include "Polygon.h"
 #include "Math.h"
+#include "Tools.h"
 #include <map>
 #include <vector>
 #include <stack>
@@ -50,9 +51,9 @@ class Scene
 	int mainMenu;
 	bool isInPolygon; 
 	State state;
-	maths::Polygon polygon; 
 	std::vector<std::vector<maths::Point>*> *allIntersection ;
 	std::vector<maths::Polygon> *stackPolygonClicked ;
+	Tools tools;
 
 	bool polygonSelected;
 	int pointSelected;
@@ -69,13 +70,10 @@ class Scene
 	// Graham Scan
 	std::vector<maths::Point>* grahamScanPoints;
 
-	//Delaunay
-	std::vector<maths::Line*>* lines;
-	std::vector<maths::Triangle*>* triangles;
-	std::vector<maths::Point*>* triangulationPoints;
-	std::vector<maths::Line*>*  triangulationLines;
-	
 
+	void RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop);
+
+	void RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result);
 
 	float color[4];
 
@@ -106,19 +104,17 @@ public:
 	bool hasSelectedPoint();
 	bool hasSelectedPolygon();
 	void changeActiveTransformation(Transformation trans);
-	void applyTransformation(char key);
+	Tools* getTools();
+	void updatePoints();
 
-	void triangularisation(bool delaunay);
-	maths::Line* createLine(maths::Point* p1, maths::Point* p2);
-	maths::Point* createPoint(float x, float y);
-	maths::Triangle* createTriangle(maths::Line* l1, maths::Line* l2, maths::Line* l3);
+	void removePoint(maths::Point* p);
 	
 	
 	static int Orientation(maths::Point* p, maths::Point* q, maths::Point* r);
 	static int Compare(const void *vp1, const void *vp2);
 
-	void RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::Point*>& result);
-	void Scene::RunJarvis(std::vector<maths::Point*>& points, std::vector<maths::Point*>& envelop);
+	void RunJarvis();
+	void RunGraham();
 };
 
 #endif // ! SCENE

@@ -1,3 +1,4 @@
+
 #ifndef DEF_INPUT
 #define DEF_INPUT
 
@@ -25,7 +26,7 @@ enum ButtonState {
 };
 
 enum State {
-	ENTER_POINTS_POLYGON, DRAW, RUN_JARVIS_MARCH, DELAUNAY, RUN_GRAHAM_SCAN
+	VIEW_POINT, POLYGONE, JARVIS, GRAHAM, TRIANGULATION, DELAUNAY, VORONOI
 };
 
 enum Transformation {
@@ -44,6 +45,7 @@ class Input
 	bool mouseMove;
 	float mouseX;
 	float mouseY;
+	bool deletePoint;
 
 
 	static void keyboardCallBack(unsigned char  touche, int x, int y);

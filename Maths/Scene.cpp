@@ -13,25 +13,20 @@ void Scene::drawCallBack()
 
 void Scene::flush()
 {
-	if (state != ENTER_POINTS_POLYGON)
-	{
-		polygon.removePoint();
-		glutPostRedisplay();
-	}
+	
 }
 
 void Scene::moveSelectedPoint(float x, float y)
 {
-	Point *p = new Point();
-	p->x = x;
-	p->y = y;
-	polygon.setPoint(p, pointSelected);
+	Point p = { x,y };
+	tools.points[pointSelected] = {x,y};
+	updatePoints();
 	glutPostRedisplay();
 }
 
 bool Scene::hasSelectedPoint()
 {
-	return (polygonSelected != -1 && pointSelected != -1);
+	return (polygonSelected ==true && pointSelected != -1);
 }
 
 
@@ -48,7 +43,7 @@ void Scene::lauchOpenGLLoop()
 void Scene::initOpenGl(int argc, const char* argv)
 {
 	glutInit(&argc, (char **)argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowPosition(200, 100);
 	glutInitWindowSize(width, height);
 
@@ -76,16 +71,14 @@ void Scene::createMenu()
 {
 	mainMenu = glutCreateMenu(Scene::menuCallBack);
 
-	glutAddMenuEntry("Exit", 0);
-	glutAddMenuEntry("Add points                   A", 1);
-	glutAddMenuEntry("End edition                  E", 2);
-	glutAddMenuEntry("Activate translation         W", 3);
-	glutAddMenuEntry("Activate rotation            X", 4);
-	glutAddMenuEntry("Activate scale               C", 5);
-	glutAddMenuEntry("Unactivate all               V", 6);
-	glutAddMenuEntry("Run Jarvis March             J", 8);
-	glutAddMenuEntry("Run Graham Scan              G", 9);
-	glutAddMenuEntry("Run Delaunay                 H", 10);
+	glutAddMenuEntry("Exit            0", 0);
+	glutAddMenuEntry("Points          1", 1);
+	glutAddMenuEntry("Polygone        2", 2);
+	glutAddMenuEntry("Jarvis          3", 5);
+	glutAddMenuEntry("Graham          4", 4);
+	glutAddMenuEntry("Triangulation   5", 5);
+	glutAddMenuEntry("Delaunay        6", 6);
+	glutAddMenuEntry("Voronoi         7", 7);
 
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -99,30 +92,26 @@ void Scene::menu(int num) {
 		exit(0);
 		break;
 	case 1:
-		input->checkKeyboardInputs('a', 0, 0);
+		input->checkKeyboardInputs('1', 0, 0);
 		break;
 	case 2:
-		input->checkKeyboardInputs('e', 0, 0);
+		input->checkKeyboardInputs('2', 0, 0);
 		break;
 	case 3:
-		input->checkKeyboardInputs('w', 0, 0);
+		input->checkKeyboardInputs('3', 0, 0);
 		break;
 	case 4:
-		input->checkKeyboardInputs('x', 0, 0);
+		input->checkKeyboardInputs('4', 0, 0);
 		break;
 	case 5:
-		input->checkKeyboardInputs('c', 0, 0);
+		input->checkKeyboardInputs('5', 0, 0);
 		break;
 	case 6:
-		input->checkKeyboardInputs('v', 0, 0);
+		input->checkKeyboardInputs('6', 0, 0);
 		break;
-	case 8:
-		input->checkKeyboardInputs('j', 0, 0);
+	case 7:
+		input->checkKeyboardInputs('7', 0, 0);
 		break;
-	case 9:
-		input->checkKeyboardInputs('g', 0, 0);
-	case 10:
-		input->checkKeyboardInputs('h', 0, 0);
 	default:
 		break;
 	}
@@ -130,53 +119,31 @@ void Scene::menu(int num) {
 	glutPostRedisplay();
 }
 
-void Scene::applyTransformation(char key)
+void Scene::RunJarvis()
 {
-	if (polygonSelected && pointSelected == -1)
-	{
-		if (activeTransformation == ROTATION)
-		{
-			int coef = 1;
-			if (key == 'd')
-				coef = -coef;
-			rotate_point(&polygon, coef*3.1416/180);
-			glutPostRedisplay();
-
-		}
-		else if (activeTransformation == SCALE)
-		{
-			float coef = 1.1;
-			if (key == 's')
-				coef = 0.9;
-
-			scalePoint(&polygon, coef);
-			glutPostRedisplay();
-		}
-		else if (activeTransformation == TRANSLATION)
-		{
-			float coef = 10;
-			float x = 0, y = 0;
-			if (key == 'z')
-				y = 1;
-			else if(key == 'q')
-				x = -1;
-			else if (key == 's')
-				y = -1;
-			else if (key == 'd')
-				x = 1;
-
-			translatePoint(&polygon, x/width* coef, y/height* coef);
-			glutPostRedisplay();
-		}
-	}
+	this->jarvisPoints->clear();
+	RunJarvis(tools.points, *jarvisPoints);
 }
 
-void Scene::RunJarvis(std::vector<maths::Point*>& points, std::vector<maths::Point*>& envelop)
+void Scene::RunGraham()
 {
+	this->RunGrahamScan(tools.points, *(this->grahamScanPoints));
+}
+
+
+Tools* Scene::getTools()
+{
+	return &tools;
+}
+
+void Scene::RunJarvis(std::vector<maths::Point>& points, std::vector<maths::Point>& envelop)
+{
+	if (points.empty())
+		return;
 	// On récupère le point le plus à gauche, s'il y en a plusieurs sur le même axe X on recupère celui qui est le plus bas sur cet axe
 	int l = 0;
 	for (int i = 1; i < points.size(); i++)
-		if (points[i]->x < points[l]->x || points[i]->x == points[l]->x && points[i]->y < points[l]->y)
+		if (points[i].x < points[l].x || points[i].x == points[l].x && points[i].y < points[l].y)
 			l = i;
 
 	
@@ -191,7 +158,7 @@ void Scene::RunJarvis(std::vector<maths::Point*>& points, std::vector<maths::Poi
 		q = (p+1) % points.size();
 		for (int i = 0; i < points.size(); i++)
 		{
-			if (Orientation(points[p], points[i], points[q]) == 2)
+			if (Orientation(&points[p], &points[i], &points[q]) == 2)
 				q = i;
 		}
 		p = q;
@@ -251,21 +218,23 @@ int Scene::Compare(const void *vp1, const void *vp2)
 }
 
 
-void Scene::RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::Point*>& result)
+void Scene::RunGrahamScan(std::vector<maths::Point> points, std::vector<maths::Point>& result)
 {
+	if (points.size()<3)
+		return;
 	// Comme pour Jarvis, on recupere le point le plus en bas à gauche
-	int ymin = points[0]->y, min = 0;
+	int ymin = points[0].y, min = 0;
 	for (int i = 1; i < points.size(); i++)
 	{
-		int y = points[i]->y;
+		int y = points[i].y;
 
-		if ((y < ymin) || (ymin == y && points[i]->x < points[min]->x))
-			ymin = points[i]->y, min = i;
+		if ((y < ymin) || (ymin == y && points[i].x < points[min].x))
+			ymin = points[i].y, min = i;
 	}
 
-	Swap(*points[0], *points[min]);
+	Swap(points[0], points[min]);
 
-	p0 = points[0];
+	p0 = &points[0];
 
 	// Ici on tri la liste des points par rapport à leur angle
 	// Si les points sont colinéaires, on tri par rapport à celui qui est le plus loin du point référent p0
@@ -276,7 +245,7 @@ void Scene::RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::
 	// Reprend un peu l'idée du tri par extraction si jamais tu vois l'algo, comme pour Jarvis
 	for (int i = 1; i < points.size(); i++)
 	{
-		while (i < (points.size() - 1) && Orientation(p0, points[i], points[i+1]) == 0)
+		while (i < (points.size() - 1) && Orientation(p0, &points[i], &points[i+1]) == 0)
 			i++;
 
 		points[m] = points[i];
@@ -288,27 +257,27 @@ void Scene::RunGrahamScan(std::vector<maths::Point*> points, std::vector<maths::
 
 	// Stack ou vector peu importe, à modifier ensuite p-e, mais pratique avec la stack
 	std::stack<maths::Point*> stack;
-	stack.push(points[0]);
-	stack.push(points[1]);
-	stack.push(points[2]);
+	stack.push(&points[0]);
+	stack.push(&points[1]);
+	stack.push(&points[2]);
 
 	for (int i = 3; i < m; i++)
 	{
 		// Dans le cas où l'on n'est pas dans le sens anti-horaire sur l'un des trois points, on depile
-		while (Orientation(nextToTop(stack), stack.top(), points[i]) != 2)
+		while (Orientation(nextToTop(stack), stack.top(), &points[i]) != 2)
 			stack.pop();
-		stack.push(points[i]);
+		stack.push(&points[i]);
 	}
 
 	int sizeStack = stack.size();
 
 	// Pour fermer l'enveloppe, penser à push le point référent
-	result.push_back(p0);
+	result.push_back(*p0);
 
 	for(int i=0; i< sizeStack; ++i)
 	{
 		//maths::Point p = stack.top();
-		result.push_back(stack.top());
+		result.push_back(*stack.top());
 		stack.pop();
 	}
 
@@ -326,26 +295,24 @@ void Scene::changeActiveTransformation(Transformation trans)
 
 bool Scene::isPointSelected(float mX, float mY)
 {
-	if (state == DRAW || state==RUN_JARVIS_MARCH || DELAUNAY)
+	float nb = 10;
+	float nbX = nb / width;
+	float nbY = nb / height;
+
+	std::cout << "mx = " << mX << "  mY=" << mY << std::endl;
+	for (int j = 0; j < tools.points.size(); j++)
 	{
-		float nb = 10;
-		float nbX = nb /width;
-		float nbY = nb / height;
+		maths::Point p = tools.points[j];
 
-		std::cout << "mx = " << mX <<"  mY=" << mY << std::endl;
-		for (int j = 0; j < polygon.getPoints()->size(); j++) 
+		std::cout << "x=" << p.x << "   y=" << p.y << std::endl;
+		if (mX > p.x - nbX && mX<p.x + nbX && mY>p.y - nbY && mY < p.y + nbY)
 		{
-			maths::Point *p = polygon.getPoints()->at(j);
-
-			std::cout << "x=" << p->x << "   y=" << p->y << std::endl;
-			if (mX > p->x - nbX && mX<p->x + nbX && mY>p->y - nbY && mY < p->y + nbY)
-			{
-				pointSelected = j;
-				polygonSelected = true;
-				return true;
-			}
+			pointSelected = j;
+			polygonSelected = true;
+			return true;
 		}
 	}
+
 	pointSelected = -1;
 	polygonSelected = false;
 
@@ -384,23 +351,21 @@ void Scene::mainLoop()
 
 
 	GLuint colorID = glGetUniformLocation(program, "myColor");
-	glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+	
 
 
-	if (state == DRAW)
+	if (state == POLYGONE)
 	{
-		if (!polygon.getPoints()->empty())
+		color[0] = 0.0;
+		color[1] = 0.0;
+		color[2] = 0.0; 
+		glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+
+		if (!tools.points.empty())
 		{
-			
-			unsigned int size = polygon.getPoints()->size();
+			unsigned int size = tools.points.size();
 
-			Point *points= (Point*) malloc(size*sizeof(Point));
-			for (int i = 0; i < size; i++)
-			{
-				points[i] = *(polygon.getPoint(i));
-			}
-
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, tools.points.data());
 			glEnableVertexAttribArray(position_location);
 
 			glPointSize(5);
@@ -408,7 +373,7 @@ void Scene::mainLoop()
 			glDrawArrays(GL_POINTS, 0, size);
 			glDisableVertexAttribArray(position_location);
 
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, tools.points.data());
 			glEnableVertexAttribArray(position_location);
 
 			glPointSize(5);
@@ -418,123 +383,211 @@ void Scene::mainLoop()
 		}
 
 	}
-	else if (state == ENTER_POINTS_POLYGON)
+	else if (state == VIEW_POINT)
 	{
+		color[0] = 0.0;
+		color[1] = 0.0;
+		color[2] = 0.0;
+		glUniform4f(colorID, color[0], color[1], color[2], color[3]);
 
-		unsigned int size = polygon.getPoints()->size();
+		unsigned int size = tools.points.size();
 
-		for (int i = 0; i < size; i++)
-		{
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, polygon.getPoint(i));
-			glEnableVertexAttribArray(position_location);
+		glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, tools.points.data());
+		glEnableVertexAttribArray(position_location);
 
-			glPointSize(10);
+		glPointSize(10);
 
-			glDrawArrays(GL_POINTS, 0, 1);
-			glDisableVertexAttribArray(position_location);
-		}
+		glDrawArrays(GL_POINTS, 0, size);
+		glDisableVertexAttribArray(position_location);
 	}
-	else if(state == RUN_JARVIS_MARCH)
+	else if(state == JARVIS)
 	{
-		//if(polygon.getPoints()->empty())
-		//{
-		//	std::cerr << "You forgot to add some points for the Jarvis march algorithm !" << std::endl;
-		//}
-		//else
-		//{
-		//	// redondance ici a cause des else if
-		//	const maths::Point *points = this->polygon.getPoints()->data();
+		color[0] = 0.0;
+		color[1] = 1.0;
+		color[2] = 0.0;
+		glUniform4f(colorID, color[0], color[1], color[2], color[3]);
 
-		//	glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
-		//	glEnableVertexAttribArray(position_location);
-
-		//	glPointSize(5);
-
-		//	glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
-		//	glDisableVertexAttribArray(position_location);
-
-		//	this->jarvisPoints->clear();
-		//	RunJarvis(*(this->polygon.getPoints()), *(this->jarvisPoints));
-		//	//ConvexHull(*(this->dataPointsJarvis), (*this->jarvisPoints));
-		//	//DrawJarvisPolygon(*(this->dataPointsJarvis), (*this->jarvisPoints));
-
-		//	if(!this->jarvisPoints->empty())
-		//	{
-		//		glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->jarvisPoints->data());
-		//		glEnableVertexAttribArray(position_location);
-
-		//		glPointSize(5);
-
-		//		glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
-		//		glDisableVertexAttribArray(position_location);
-		//	}
-		//}
-
-		if (polygon.getPoints()->size()<2)
+		if(tools.points.empty())
 		{
-			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
+			std::cerr << "You forgot to add some points for the Jarvis march algorithm !" << std::endl;
 		}
 		else
 		{
 			// redondance ici a cause des else if
-			const maths::Point *points = *(this->polygon.getPoints()->data());
+			const maths::Point *points = tools.points.data();
 
-			glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, points);
 			glEnableVertexAttribArray(position_location);
 
 			glPointSize(5);
 
-			glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
+			glDrawArrays(GL_POINTS, 0, tools.points.size());
 			glDisableVertexAttribArray(position_location);
 
-			triangularisation(false);
 
-			
+			if(!this->jarvisPoints->empty())
+			{
+				glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, this->jarvisPoints->data());
+				glEnableVertexAttribArray(position_location);
 
+				glPointSize(5);
 
-			
-
+				glDrawArrays(GL_LINE_STRIP, 0, this->jarvisPoints->size());
+				glDisableVertexAttribArray(position_location);
+			}
 		}
+
 	}
-	else if (state == DELAUNAY)
+	else if (state == TRIANGULATION)
 	{
-		if (polygon.getPoints()->size()<2)
+		//delaunay qui marche
+		if (tools.points.size()<2)
 		{
 			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
 		}
 		else
 		{
-			for (int i = 0; i < triangulationLines->size(); i++)
+			color[0] = 0.0;
+			color[1] = 0.0;
+			color[2] = 1.0;
+			glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+
+			unsigned int size = tools.cotes.size();
+
+			Point *points = (Point*)malloc(size * 2 * sizeof(Point));
+			int j = 0;
+			for (int i = 0; i < size; i++)
 			{
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, triangulationLines->at(i));
-				glEnableVertexAttribArray(position_location);
+				points[j] = *tools.cotes[i].s1->p;
+				points[j + 1] = *tools.cotes[i].s2->p;
+				j += 2;
+			}
 
-				glPointSize(5);
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, points);
+			glEnableVertexAttribArray(position_location);
 
-				glDrawArrays(GL_LINE, 0, 2);
-				glDisableVertexAttribArray(position_location);
+			glPointSize(5);
+
+			glDrawArrays(GL_LINES, 0, size * 2);
+			glDisableVertexAttribArray(position_location);
+		}
+
+
+	}
+	else if (state == DELAUNAY)
+	{
+		color[0] = 0.0;
+		color[1] = 0.0;
+		color[2] = 1.0;
+		glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+
+		//delaunay qui marche
+		if (tools.points.size()<2)
+		{
+			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
+		}
+		else
+		{
+
+			unsigned int size = tools.cotes.size();
+
+			Point *points = (Point*)malloc(size * 2 * sizeof(Point));
+			int j = 0;
+			for (int i = 0; i < size; i++)
+			{
+				points[j] = *tools.cotes[i].s1->p;
+				points[j + 1] = *tools.cotes[i].s2->p;
+				j += 2;
+			}
+
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, points);
+			glEnableVertexAttribArray(position_location);
+
+			glPointSize(5);
+
+			glDrawArrays(GL_LINES, 0, size * 2);
+			glDisableVertexAttribArray(position_location);
+		}
+
+
+	}
+	else if (state == VORONOI)
+	{
+		//delaunay qui marche
+		if (tools.points.size()<2)
+		{
+			std::cerr << "You forgot to add some points for the Delaunay algorithm !" << std::endl;
+		}
+		else
+		{
+			color[0] = 0.0;
+			color[1] = 0.0;
+			color[2] = 0.0;
+			glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+
+			unsigned int size = tools.points.size();
+
+			glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, tools.points.data());
+			glEnableVertexAttribArray(position_location);
+
+			glPointSize(10);
+
+			glDrawArrays(GL_POINTS, 0, size);
+			glDisableVertexAttribArray(position_location);
+
+			if (tools.points.size()>2)
+			{
+				color[0] = 1.0;
+				color[1] = 0.0;
+				color[2] = 0.0;
+				glUniform4f(colorID, color[0], color[1], color[2], color[3]);
+
+				float r, g, b;
+
+				std::tie(r, g, b) = tools.voronoiColor;
+				glColor3f(r, g, b);
+
+				glBegin(GL_LINES);
+
+				for (int i = 0; i < tools.sommets.size(); i++)
+				{
+					for (int k = 0; k < tools.regions.at(&tools.sommets.at(i)).size(); k++)
+					{
+						glVertex2f(tools.regions.at(&tools.sommets.at(i)).at(k).p1.x,
+									tools.regions.at(&tools.sommets.at(i)).at(k).p1.y);
+						glVertex2f(tools.regions.at(&tools.sommets.at(i)).at(k).p2.x,
+							tools.regions.at(&tools.sommets.at(i)).at(k).p2.y);
+					}
+				}
+
+				glEnd();
 			}
 		}
-	}
-	else if(state == RUN_GRAHAM_SCAN)
-	{
-		const maths::Point *points = *(this->polygon.getPoints()->data());
 
-		glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, points);
+
+	}
+	else if(state == GRAHAM)
+	{
+		color[0] = 0.0;
+		color[1] = 1.0;
+		color[2] = 0.0;
+		std::cout << "Graham";
+		const maths::Point *points = tools.points.data();
+
+		glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, points);
 		glEnableVertexAttribArray(position_location);
 
 		glPointSize(5);
 
-		glDrawArrays(GL_POINTS, 0, this->polygon.getPoints()->size());
+		glDrawArrays(GL_POINTS, 0, tools.points.size());
 		glDisableVertexAttribArray(position_location);
 
-		if(this->polygon.getPoints()->size() > 3)
+		if(tools.points.size() > 3)
 		{
-			//this->RunGrahamScan((this->polygon.getPoints()), *(this->grahamScanPoints));
 
 			if(!this->grahamScanPoints->empty())
 			{
-				glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, 0, this->grahamScanPoints->data());
+				glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, this->grahamScanPoints->data());
 				glEnableVertexAttribArray(position_location);
 
 				glPointSize(5);
@@ -575,26 +628,69 @@ State Scene::getState()
 
 void Scene::addPoint(maths::Point* p)
 {
+	p->y = height - p->y;
+	p->x -= width / 2;
+	p->y -= height / 2;
+	p->x /= width / 2;
+	p->y /= height / 2;
+	//std::cout << "point normalized x=" << p.x << " y=" << p.y << std::endl;
+
+	tools.points.push_back(*p);
+
+	updatePoints();
+}
+
+void Scene::removePoint(Point* p)
+{  
+	p->y = height - p->y;
+	p->x -= width / 2;
+	p->y -= height / 2;
+	p->x /= width / 2;
+	p->y /= height / 2;
+
+	float nb = 10;
+	float nbX = nb / width;
+	float nbY = nb / height;
+
+	for (int j = 0; j < tools.points.size(); j++)
+	{
+		maths::Point p2 = tools.points[j];
+
+		if (p->x > p2.x - nbX && p->x<p2.x + nbX && p->y>p2.y - nbY && p->y < p2.y + nbY)
+		{
+			tools.points.erase(tools.points.begin() + j);
+			updatePoints();
+			return;
+		}
+	}
+
+}
+
+void Scene::updatePoints()
+{
 	switch (state)
 	{
-	case ENTER_POINTS_POLYGON:
-			//std::cout << "point added x=" << p.x << " y=" << p.y << std::endl;
-			p->y = height - p->y;
-			p->x -= width / 2;
-			p->y -= height / 2;
-			p->x /= width / 2;
-			p->y /= height / 2;
-			//std::cout << "point normalized x=" << p.x << " y=" << p.y << std::endl;
-			
-			polygon.addPoint(p);
-
+	case JARVIS:
+		RunJarvis();
 		break;
-	case DRAW:
+	case GRAHAM:
+		RunGraham();
+		break;
+	case TRIANGULATION:
+		tools.triangulation();
+		break;
+	case DELAUNAY:
+		tools.triangulation();
+		tools.delaunayTriangulation();
+		break;
+	case VORONOI:
+		tools.triangulation();
+		tools.delaunayTriangulation();
+		tools.voronoiAlgo();
 		break;
 	default:
 		break;
 	}
-
 }
 
 void Scene::setDrawWindow()
@@ -735,156 +831,9 @@ void Scene::rotate_point(maths::Polygon *poly,float angle)
 
 }
 
-void Scene::triangularisation(bool makeDelaunay)
-{
-	for (int i = 0; i < polygon.getPoints()->size(); i++)
-	{
-		Point *p1 = polygon.getPoint(i);
-		int j;
-		for (j = 0; j < triangulationPoints->size(); j++)
-		{
-			Point *p2 = triangulationPoints->at(j);
-			if (p2->x == p1->x)
-			{
-				if (p2->y >= p1->x)
-					break;
-			}
-			if (p2->x > p1->x)
-			{
-				break;
-			}
-		}
-		triangulationPoints->insert(triangulationPoints->begin() + j, p1);
-	}
-
-	int size = triangulationPoints->size();
-
-	triangulationLines->clear();
-	triangles->clear();
-	if (size < 2)
-		return;
-	Line *previousLine = createLine(triangulationPoints->at(0), triangulationPoints->at(1));
-	triangulationLines->push_back(previousLine);
-	int i = 2;
-	while (previousLine->isCol(triangulationPoints->at(i)) && i<size)
-	{
-		previousLine = createLine(previousLine->p2, triangulationPoints->at(i));
-		triangulationLines->push_back(previousLine);
-		i++;
-	}
-	if (i == size)
-		return;
-	Point *p = triangulationPoints->at(i);
-	for (int i = 0; i < triangulationLines->size(); i++)
-	{
-		Line *l1  = triangulationLines->at(i);
-		Line *l2 = createLine(l1->p1, p);
-		Line *l3 = createLine(l1->p2, p);
-		Triangle *t = createTriangle(l1, l2, l3);
-
-		
-		
-		triangles->push_back(t);
-	}
-
-	/*for (; i < triangulationPoints->size(); i++)
-	{
-		Point *p = triangulationPoints->at(i);
-		for (int j = 0; j < triangulationLines->size(); j++)
-		{
-
-		}
-	}*/
-
-}
-
-void updateLines(Triangle* t)
-{
-	for (int i = 0; i < 3; i++)
-	{
-		Line *l, *l2;
-		if (i == 0)
-		{
-			l = t->l1;
-			l2 = t->l2;
-		}
-		else if (i == 1)
-		{
-			l = t->l2;
-			l2 = t->l1;
-		}
-		else
-		{
-			l = t->l3;
-			l2 = t->l1;
-		}
-		Point *p;
-		if (!l->p1->equals2D(l2->p1) && l->p2->equals2D(l2->p1))
-			p = l2->p1;
-		else
-			p = l2->p2;
-		float nb = sign();
-
-
-	}
-}
-
-Line* Scene::createLine(Point* p1, Point* p2)
-{
-	Line* l = new Line();
-	l->p1 = p1;
-	l->p2 = p2;
-	lines->push_back(l);
-	return l;
-}
-
-
-Point* Scene::createPoint(float x, float y)
-{
-	Point* p = new Point();
-	p->x = x;
-	p->y = y;
-	return p;
-}
-
-Triangle* Scene::createTriangle(Line* l1, Line* l2, Line* l3)
-{
-	Triangle* t = new Triangle();
-	t->l1 = l1;
-	t->l2 = l2;
-	t->l3 = l3;
-	return t;
-}
-
-
-float sign(Line* l, Point* p3)
-{
-	Point *p1, *p2;
-	if (l->p1->x < l->p2->x)
-	{
-		p1 = l->p1;
-	}
-	else if (l->p1->x > l->p2->x)
-	{
-		p2 = l->p2;
-	}
-	else
-	{
-		if (l->p1->y < l->p2->y)
-		{
-			p1 = l->p1;
-		}
-		else
-		{
-			p2 = l->p2;
-		}
-	}
-	return (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y);
-}
-
 Scene::Scene(int w, int h)
 {
-	state = DRAW;
+	state = VIEW_POINT;
 	height = h;
 	width = w;
 	value = 0;
@@ -898,12 +847,6 @@ Scene::Scene(int w, int h)
 	this->jarvisPoints = new std::vector<maths::Point>();
 	this->grahamScanPoints = new std::vector<maths::Point>();
 
-
-	lines = new std::vector<maths::Line*>(); 
-	triangles = new std::vector<maths::Triangle*>();
-	triangulationPoints = new std::vector<maths::Point*>();
-	triangulationLines = new std::vector<maths::Line*>();
-
 	srand(time(NULL));
 
 	countPass = 0;
@@ -916,6 +859,9 @@ Scene::Scene(int w, int h)
 	color[2] = 1.0;
 	color[3] = 1.0;
 	activeTransformation = NO_TRANS;
+	tools = Tools();
+
+
 }
 
 

@@ -24,6 +24,8 @@
 
 int sizetab, sizeind;
 
+bool firstInit = true;
+
 
 EsgiShader g_BasicShader;
 
@@ -157,9 +159,13 @@ bool Initialize()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	ChangeCam(CamType);
+	if (firstInit)
+	{
+		ChangeCam(CamType);
+		firstInit = false;
+	}
 
-
+	
 	
 
 	return true;
@@ -196,7 +202,7 @@ void animate()
 	OldTime = TimeSinceAppStartedInMS;
 
 	glViewport(0, 0, width, height);
-	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+	glClearColor(1.0, 1.0, 1.0, 1.0f);
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);

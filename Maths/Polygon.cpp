@@ -2,7 +2,7 @@
 
 float g_Knots[] = { 0.0f,0.0f,0.0f,0.0f,0.25f,0.5f,0.75f,1.0f,1.0f,1.0f,1.0f };
 
-
+using namespace maths;
 
 
 void maths::Polygon::addPoint(maths::Point* p)
@@ -14,11 +14,11 @@ void maths::Polygon::addPoint(maths::Point* p)
 	bool find = false;
 	for (int i = 0; i < points->size(); i++)
 	{
-		if (points->at(i)->equals2D(p))
+		/*if (*points->at(i)==*p)
 		{
 			std::cout << "Point already in polygon" << std::endl;
 			return;
-		}
+		}*/
 		
 	}
 	points->push_back(p);
@@ -240,18 +240,39 @@ maths::Polygon::~Polygon()
 {
 }
 
-float maths::Triangle::sign(Point* p1, Point* p2, Point* p3)
+bool maths::operator==(const Triangle& t1, const Triangle& t2)
 {
-	return (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y);
+	if (t1.a1 == t2.a1 && t1.a2 == t2.a2 && t1.a3 == t2.a3)
+	{
+		return true;
+	}
+
+	return false;
 }
-
-bool maths::Triangle::pointInTriangle(Point* pt)
+bool maths::operator==(const Cote& a1, const Cote& a2)
 {
-	bool b1, b2, b3;
+	if (a1.s1 == a2.s1 && a1.s2 == a2.s2)
+	{
+		return true;
+	}
 
-	b1 = sign(pt, l1->p1, l1->p2) < 0.0f;
-	b2 = sign(pt, l2->p1, l2->p2) < 0.0f;
-	b3 = sign(pt, l3->p1, l3->p2) < 0.0f;
+	return false;
+}
+bool maths::operator==(const Sommet& s1, const Sommet& s2)
+{
+	if (*s1.p == *s2.p)
+	{
+		return true;
+	}
 
-	return ((b1 == b2) && (b2 == b3));
+	return false;
+}
+bool maths::operator==(const Point& p1, const Point& p2)
+{
+	if (p1.x == p2.x && p1.y == p2.y)
+	{
+		return true;
+	}
+
+	return false;
 }
