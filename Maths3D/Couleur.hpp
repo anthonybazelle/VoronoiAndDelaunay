@@ -3,8 +3,7 @@
 enum Couleur
 {
 	
+	blue = 2,
 	red = 1,
-	purple = 0,
-	
-	blue = 2
+	purple = 0
 };

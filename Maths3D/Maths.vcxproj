@@ -164,13 +164,13 @@
     <ClInclude Include="..\common\mat4.h" />
     <ClInclude Include="Cam.hpp" />
     <ClInclude Include="Couleur.hpp" />
-    <ClInclude Include="Edge.hpp" />
-    <ClInclude Include="EnvInc.hpp" />
+    <ClInclude Include="Cote.hpp" />
+    <ClInclude Include="EnveloppeConv.hpp" />
     <ClInclude Include="Face.hpp" />
     <ClInclude Include="Graph.hpp" />
     <ClInclude Include="Input.hpp" />
     <ClInclude Include="Point.hpp" />
-    <ClInclude Include="Summit.hpp" />
+    <ClInclude Include="Sommet.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

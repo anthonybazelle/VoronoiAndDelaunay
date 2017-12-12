@@ -74,7 +74,7 @@ void Scene::createMenu()
 	glutAddMenuEntry("Exit            0", 0);
 	glutAddMenuEntry("Points          1", 1);
 	glutAddMenuEntry("Polygone        2", 2);
-	glutAddMenuEntry("Jarvis          3", 5);
+	glutAddMenuEntry("Jarvis          3", 3);
 	glutAddMenuEntry("Graham          4", 4);
 	glutAddMenuEntry("Triangulation   5", 5);
 	glutAddMenuEntry("Delaunay        6", 6);
@@ -127,6 +127,7 @@ void Scene::RunJarvis()
 
 void Scene::RunGraham()
 {
+	grahamScanPoints->clear();
 	this->RunGrahamScan(tools.points, *(this->grahamScanPoints));
 }
 
@@ -299,12 +300,12 @@ bool Scene::isPointSelected(float mX, float mY)
 	float nbX = nb / width;
 	float nbY = nb / height;
 
-	std::cout << "mx = " << mX << "  mY=" << mY << std::endl;
+	//std::cout << "mx = " << mX << "  mY=" << mY << std::endl;
 	for (int j = 0; j < tools.points.size(); j++)
 	{
 		maths::Point p = tools.points[j];
 
-		std::cout << "x=" << p.x << "   y=" << p.y << std::endl;
+		//std::cout << "x=" << p.x << "   y=" << p.y << std::endl;
 		if (mX > p.x - nbX && mX<p.x + nbX && mY>p.y - nbY && mY < p.y + nbY)
 		{
 			pointSelected = j;
@@ -571,7 +572,7 @@ void Scene::mainLoop()
 		color[0] = 0.0;
 		color[1] = 1.0;
 		color[2] = 0.0;
-		std::cout << "Graham";
+		//std::cout << "Graham";
 		const maths::Point *points = tools.points.data();
 
 		glVertexAttribPointer(position_location, 2, GL_FLOAT, GL_FALSE, 0, points);

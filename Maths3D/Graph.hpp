@@ -1,30 +1,30 @@
 #pragma once
-#include "Summit.hpp"
+#include "Sommet.hpp"
 
 class Graph {
 private:
-	std::vector<Summit*> *summitList;
-	std::vector<Edge*> *edgeList;
+	std::vector<Sommet*> *summitList;
+	std::vector<Cote*> *edgeList;
 	std::vector<Face*> *faceList;
 
 
 public:
 	Graph() {
-		summitList = new std::vector<Summit*>;
-		edgeList = new std::vector<Edge*>;
+		summitList = new std::vector<Sommet*>;
+		edgeList = new std::vector<Cote*>;
 		faceList = new std::vector<Face*>;
 	}
-	Graph(std::vector<Summit*> *s, std::vector<Face*>* f, std::vector<Edge*>* e)
+	Graph(std::vector<Sommet*> *s, std::vector<Face*>* f, std::vector<Cote*>* e)
 	{
 		summitList = s;
 		faceList = f;
 		edgeList = e;
 	}
-	void setSummitList(std::vector<Summit*>* s)
+	void setSummitList(std::vector<Sommet*>* s)
 	{
 		summitList = s;
 	}
-	std::vector<Summit*> * getSummitList()
+	std::vector<Sommet*> * getSummitList()
 	{
 		return summitList;
 	}
@@ -36,11 +36,11 @@ public:
 	{
 		return faceList;
 	}
-	void setEdgeList(std::vector<Edge*>* e)
+	void setEdgeList(std::vector<Cote*>* e)
 	{
 		edgeList = e;
 	}
-	std::vector<Edge*> * getEdgeList()
+	std::vector<Cote*> * getEdgeList()
 	{
 		return edgeList;
 	}

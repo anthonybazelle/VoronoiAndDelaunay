@@ -34,7 +34,6 @@ namespace Esgi
 	{
 		memset(m, 0, sizeof(float) * 16);
 		m[0] = 1.0f; m[5] = 1.0f; m[10] = 1.0f; m[15] = 1.0f;
-		// equivalent a MakeScale(1.0f, 1.0f, 1.0f);
 	}
 
 	void Mat4::MakeScale(float sx, float sy, float sz)
@@ -120,17 +119,12 @@ namespace Esgi
 		m[15] = 0.0f;
 	}
 
-}; // Esgi
+}; 
 
 Esgi::Mat4 operator*(const Esgi::Mat4& A, Esgi::Mat4& B)
 {
-	// Mij = Sum(k) Aik * Bkj
 	Esgi::Mat4 M;
 	memset(M.m, 0, sizeof(float) * 16);
-	// les boucles j et i sont inversees car on itere
-	// colonne apres colonne, mais en memoire les donnees
-	// sont justement representees en colonne d'abord 
-	// (column major) cad colonne apres colonne
 	for (int j = 0; j < 4; j++) 
 	{
 		for (int i = 0; i < 4; i++) 
@@ -145,7 +139,7 @@ Esgi::Mat4 operator*(const Esgi::Mat4& A, Esgi::Mat4& B)
 }
 
 Esgi::Mat4 FPSCamera(float tx, float ty, float tz, float rx, float ry)
-{ //tx, ty et tz sont les coordonnées de la position de la caméra FPS
+{ 
 	Esgi::Mat4 rotX;
 	Esgi::Mat4 rotY;
 	Esgi::Mat4 tran;
@@ -167,8 +161,7 @@ Esgi::Mat4 FPSCamera(float tx, float ty, float tz, float rx, float ry)
 }
 
 Esgi::Mat4 OrbitCamera(float px, float py, float pz, float distance, float rx, float ry)
-{	//px, py et pz sont les coordonnées x Y et Z du centre de la vue orbit
-	//distance est la distance avec le centre
+{	
 	Esgi::Mat4 rotX;
 	Esgi::Mat4 rotY;
 	Esgi::Mat4 tran;
@@ -193,4 +186,4 @@ Esgi::Mat4 OrbitCamera(float px, float py, float pz, float distance, float rx, f
 	return Orbit;
 }
 
-#endif // ESGI_MAT4_H
+#endif 

@@ -11,14 +11,6 @@ float DeltaTime;
 bool mustReinit = false;
 
 
-float COS(float angle)
-{
-	return cos(angle * 2 * 0.00872665);
-}
-float SIN(float angle)
-{
-	return sin(angle * 2 * 0.00872665);
-}
 
 
 void keyboard(unsigned char key, int x, int y)
@@ -86,11 +78,18 @@ void keyboard(unsigned char key, int x, int y)
 	}
 }
 
+
+
+float COS(float angle)
+{
+	return cos(angle * 2 * 0.00872665);
+}
+float SIN(float angle)
+{
+	return sin(angle * 2 * 0.00872665);
+}
 void mouse(int x, int y)
 {
-
-	//rotX = (float)(y-height*0.5f) * rotSpeed;
-	//rotY = (float)(x-width*0.5f) * rotSpeed;
 	if (abs(y - lastposY) < 10 && abs(x - lastposX) < 10)
 	{
 		rotX += (y - lastposY)* rotSpeed;

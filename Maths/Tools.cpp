@@ -495,7 +495,7 @@ bool Tools::isTriangleDirect(Triangle tr)
 
 	std::tie(s1, s2, s3) = sommetsTriangle(&tr);
 
-	return determinant(s1, s2, s3) < 0;
+	return det(s1, s2, s3) < 0;
 }
 
 bool Tools::isTriangleLeft(Triangle tr, Cote* e)
@@ -548,10 +548,10 @@ bool Tools::isTriangleLeft(Triangle tr, Cote* e)
 		}
 	}
 
-	return determinant(s1, s2, s3) < 0;
+	return det(s1, s2, s3) < 0;
 }
 
-float Tools::determinant(Sommet* s1, Sommet* s2, Sommet* s3)
+float Tools::det(Sommet* s1, Sommet* s2, Sommet* s3)
 {
 	return 0.5 * ((s1->p->x - s2->p->x) * (s3->p->y - s2->p->y) - (s1->p->y - s2->p->y) * (s3->p->x - s2->p->x));
 }

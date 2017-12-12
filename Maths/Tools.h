@@ -32,7 +32,7 @@ public:
 	void voronoiAlgo();
 	bool isTriangleDirect(maths::Triangle);
 	bool isTriangleLeft(maths::Triangle, maths::Edge*);
-	float determinant(maths::Apex*, maths::Apex*, maths::Apex*);
+	float det(maths::Apex*, maths::Apex*, maths::Apex*);
 	bool delaunayCriteria(maths::Edge*);
 	std::vector<maths::Cote*> cotesAdjacents(maths::Point*);
 	float orientedAngle(maths::Edge*, maths::Edge*, maths::Point*);

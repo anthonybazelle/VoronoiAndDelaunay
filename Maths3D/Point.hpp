@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
-int sizeCube = 3;
+
+int sizeMiniCube = 1;
 
 struct Point {
 	float x;
@@ -44,6 +45,49 @@ struct Point {
 	}
 };
 
+
+
+
+std::vector<Point> transformPointsToCube(std::vector<Point> p)
+{
+	std::vector<Point> tmp;
+	int j = 0;
+	for (int i = 0; i < p.size(); i++)
+	{
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, +1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, +1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, +1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, +1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, -1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, -1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, -1.0f, 0.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, -1.0f, 0.0f, 0.0f));
+
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, +1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, +1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, +1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, +1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, -1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, -1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, -1.0f, 0.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, -1.0f, 0.0f));
+
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, 0.0f, -1.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, 0.0f, -1.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, 0.0f, -1.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z - sizeMiniCube, 0.0f, 0.0f, -1.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, 0.0f, +1.0f));
+		tmp.push_back(Point(p[i].x + sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, 0.0f, +1.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y - sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, 0.0f, +1.0f));
+		tmp.push_back(Point(p[i].x - sizeMiniCube, p[i].y + sizeMiniCube, p[i].z + sizeMiniCube, 0.0f, 0.0f, +1.0f));
+
+		j += 8;
+	}
+
+	return tmp;
+
+}
+
 float * structToTab(std::vector<Point> newPoints)
 {
 	float* tabP = new float[newPoints.size() * 6];
@@ -74,51 +118,8 @@ std::vector<Point> createRandomPoints(int n)
 
 	for (int i = 0; i < 100; i++)
 	{
-		tmp.push_back(Point(RandomFloat(-500,500), RandomFloat(-500, 500), RandomFloat(-500, 500), 0, 0, 0));
-		
+		tmp.push_back(Point(RandomFloat(-500, 500), RandomFloat(-500, 500), RandomFloat(-500, 500), 0, 0, 0));
+
 	}
 	return tmp;
 }
-
-
-std::vector<Point> transformPointsToCube(std::vector<Point> p)
-{
-	std::vector<Point> tmp;
-	int j = 0;
-	for (int i = 0; i < p.size(); i++)
-	{
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, +1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, +1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, +1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, +1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, -1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, -1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, -1.0f, 0.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, -1.0f, 0.0f, 0.0f));
-
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, 0.0f, +1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, 0.0f, +1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, 0.0f, +1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, 0.0f, +1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, 0.0f, -1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, 0.0f, -1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, 0.0f, -1.0f, 0.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, 0.0f, -1.0f, 0.0f));
-
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, 0.0f, 0.0f, -1.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, 0.0f, 0.0f, -1.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z - sizeCube, 0.0f, 0.0f, -1.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z - sizeCube, 0.0f, 0.0f, -1.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, 0.0f, 0.0f, +1.0f));
-		tmp.push_back(Point(p[i].x + sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, 0.0f, 0.0f, +1.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y - sizeCube, p[i].z + sizeCube, 0.0f, 0.0f, +1.0f));
-		tmp.push_back(Point(p[i].x - sizeCube, p[i].y + sizeCube, p[i].z + sizeCube, 0.0f, 0.0f, +1.0f));
-
-		j += 8;
-	}
-
-	return tmp;
-
-}
-
-
